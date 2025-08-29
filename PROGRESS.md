@@ -15,22 +15,25 @@ This document tracks the development progress of the LearnX project.
   - [x] Created a public repository on GitHub: [https://github.com/Maapel/LearnX](https://github.com/Maapel/LearnX)
   - [x] Pushed the initial project setup to the GitHub repository.
 
-## Pending Tasks
+## Completed Tasks (Continued)
 
 ### Backend
 - **Web Scraping Engine**
-  - [ ] Create an API endpoint to receive a topic from the frontend.
-  - [ ] Implement web scraping logic using `axios` and `cheerio` to fetch relevant articles and video links.
-  - [ ] Define a schema and model for storing scraped data in MongoDB.
+  - [x] Created an API endpoint to receive a topic from the frontend.
+  - [x] Implemented web scraping logic using `axios` and `cheerio` to fetch relevant articles and video links.
+  - [x] Defined a schema and model for storing scraped data in MongoDB.
 - **AI Processing Core**
-  - [ ] Integrate with an LLM API (e.g., Gemini or GPT).
-  - [ ] Create a service to process scraped content and generate a course outline.
-  - [ ] Store the generated course structure in MongoDB.
+  - [x] Integrated with an LLM API (SerpApi).
+  - [x] Created a service to process scraped content and generate a course outline.
+  - [x] Stored the generated course structure in MongoDB.
 - **API Development**
-  - [ ] Create API endpoints for the frontend to fetch generated courses.
+  - [x] Created API endpoints for the frontend to fetch generated courses.
 
 ### Frontend
 - **User Interface**
-  - [ ] Design and implement a user interface for inputting a topic.
-  - [ ] Create components to display the generated course outline in a clean, navigable format.
-  - [ ] Implement functionality to make API calls to the backend.
+  - [x] Designed and implemented a user interface for inputting a topic.
+  - [x] Created components to display the generated course outline in a clean, navigable format.
+  - [x] Implemented functionality to make API calls to the backend.
+
+## Pending Tasks
+- No pending tasks for the MVP.
