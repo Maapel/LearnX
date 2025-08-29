@@ -10,6 +10,9 @@ const CourseSchema = new mongoose.Schema({
     type: [String],
     required: true
   },
+  outline: {
+    type: Object
+  },
   createdAt: {
     type: Date,
     default: Date.now

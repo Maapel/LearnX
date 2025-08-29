@@ -22,6 +22,7 @@ app.get('/', (req, res) => {
 
 // Use Routes
 app.use('/api/scrape', require('./routes/scrape'));
+app.use('/api/ai', require('./routes/ai'));
 
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
