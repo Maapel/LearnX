@@ -20,6 +20,9 @@ app.get('/', (req, res) => {
   res.send('LearnX Backend API');
 });
 
+// Use Routes
+app.use('/api/scrape', require('./routes/scrape'));
+
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
 });
