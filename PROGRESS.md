@@ -26,6 +26,8 @@ This document tracks the development progress of the LearnX project.
   - [x] Integrated with an LLM API (SerpApi).
   - [x] Created a service to process scraped content and generate a course outline.
   - [x] Stored the generated course structure in MongoDB.
+  - [x] Replaced SerpApi with OpenAI for AI processing.
+  - [x] Integrated Vercel AI SDK for streaming responses from OpenAI API.
 - **API Development**
   - [x] Created API endpoints for the frontend to fetch generated courses.
 
