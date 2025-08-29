@@ -1,7 +1,14 @@
 const express = require('express');
 const router = express.Router();
 const Course = require('../models/Course');
-const { getJson } = require("serpapi");
+const { OpenAIStream, StreamingTextResponse } = require('ai');
+const OpenAI = require('openai');
+const axios = require('axios');
+const cheerio = require('cheerio');
+
+const openai = new OpenAI({
+  apiKey: process.env.OPENAI_API_KEY,
+});
 
 // @route   POST api/ai/process
 // @desc    Process scraped links to generate a course outline
@@ -21,32 +28,39 @@ router.post('/process', async (req, res) => {
     }
 
     // AI processing logic will be implemented here.
-    const response = await getJson({
-      engine: "google",
-      q: topic,
-      api_key: process.env.SERPAPI_API_KEY,
+    let content = '';
+    for (const link of course.links) {
+      try {
+        const { data } = await axios.get(link);
+        const $ = cheerio.load(data);
+        content += $('body').text();
+      } catch (error) {
+        console.error(`Error scraping ${link}: ${error.message}`);
+      }
+    }
+
+    const response = await openai.chat.completions.create({
+      model: 'gpt-3.5-turbo',
+      stream: true,
+      messages: [
+        { role: 'system', content: 'You are a helpful assistant that generates course outlines in JSON format. The JSON should have a "modules" array, where each module has a "title" and a "resources" array. Each resource should have a "title", "link", and "snippet".' },
+        { role: 'user', content: `Generate a course outline for the topic "${topic}" based on the following content:\n\n${content}` },
+      ],
     });
 
-    const organicResults = response.organic_results;
-
-    const outline = organicResults.map(result => ({
-      title: result.title,
-      link: result.link,
-      snippet: result.snippet
-    }));
-
-    course.outline = {
-      modules: [
-        {
-          title: "Introduction",
-          resources: outline
+    const stream = OpenAIStream(response, {
+      async onFinal(completion) {
+        try {
+          const outline = JSON.parse(completion);
+          course.outline = outline;
+          await course.save();
+        } catch (error) {
+          console.error('Error parsing or saving outline:', error);
         }
-      ]
-    };
+      },
+    });
 
-    await course.save();
-
-    res.json(course);
+    return new StreamingTextResponse(stream);
   } catch (err) {
     console.error(err.message);
     res.status(500).send('Server Error');
