@@ -38,4 +38,15 @@ This document tracks the development progress of the LearnX project.
   - [x] Implemented functionality to make API calls to the backend.
 
 ## Pending Tasks
-- No pending tasks for the MVP.
+
+### For Testing Web Scraping (Temporary Changes - Reverted)
+- [x] Updated `LearnX/server/.env` to use local MongoDB and commented out `OPENAI_API_KEY`.
+- [x] Removed AI route from `LearnX/server/index.js`.
+- [x] Modified `LearnX/client/src/App.js` to only call the scrape API and display raw links.
+- [x] Updated `PROGRESS.md` to reflect these temporary changes.
+
+### Multi-LLM Support (Gemini Integration)
+- [x] Installed `@google/generative-ai` package.
+- [x] Updated `.env` to include `GEMINI_API_KEY` and `ACTIVE_LLM` variable.
+- [x] Modified `ai.js` to dynamically choose between OpenAI and Gemini.
+- [ ] Update `PROGRESS.md` to reflect these changes.
