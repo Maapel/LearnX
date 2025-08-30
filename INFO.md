@@ -26,7 +26,7 @@ Database: MongoDB for its flexible, NoSQL structure, which is ideal for storing 
 
 AI/ML Integration: API calls to a large language model (LLM) like Google's Gemini or OpenAI's GPT for content structuring.
 
-Web Scraping: Axios and Cheerio for simple, static web pages.
+Web Scraping: The 'google-it' package for search result acquisition.
 
 Deployment: The project will be containerized with Docker and hosted on AWS.
 
