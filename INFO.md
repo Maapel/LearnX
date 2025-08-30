@@ -54,7 +54,7 @@ Initialize Node.js Project: Navigate to the server folder and run npm init -y.
 
 Install Dependencies: Install the necessary libraries using npm:
 
-npm install express cheerio axios mongoose dotenv
+npm install express cheerio axios mongoose dotenv google-it
 
 express: The web framework.
 
