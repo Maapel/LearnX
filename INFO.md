@@ -28,7 +28,7 @@ AI/ML Integration: API calls to a large language model (LLM) like Google's Gemin
 
 Web Scraping: The 'google-it' package for search result acquisition.
 
-Deployment: The project will be containerized with Docker and hosted on AWS.
+Deployment: The project will be deployed on Vercel.
 
 4. Step-by-Step Project Setup Guide
 Follow these steps to set up the MVP project from the ground up.
