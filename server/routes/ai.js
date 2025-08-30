@@ -3,12 +3,22 @@ const router = express.Router();
 const Course = require('../models/Course');
 const { OpenAIStream, StreamingTextResponse } = require('ai');
 const OpenAI = require('openai');
+const { GoogleGenerativeAI } = require('@google/generative-ai');
 const axios = require('axios');
 const cheerio = require('cheerio');
+const { OpenAIStream, GoogleGenerativeAIStream, StreamingTextResponse } = require('ai');
 
-const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY,
-});
+const activeLLM = process.env.ACTIVE_LLM || 'openai'; // Default to openai
+
+let llm;
+if (activeLLM === 'gemini') {
+  const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
+  llm = genAI.getGenerativeModel({ model: 'gemini-pro' });
+} else {
+  llm = new OpenAI({
+    apiKey: process.env.OPENAI_API_KEY,
+  });
+}
 
 // @route   POST api/ai/process
 // @desc    Process scraped links to generate a course outline
@@ -39,26 +49,43 @@ router.post('/process', async (req, res) => {
       }
     }
 
-    const response = await openai.chat.completions.create({
-      model: 'gpt-3.5-turbo',
-      stream: true,
-      messages: [
-        { role: 'system', content: 'You are a helpful assistant that generates course outlines in JSON format. The JSON should have a "modules" array, where each module has a "title" and a "resources" array. Each resource should have a "title", "link", and "snippet".' },
-        { role: 'user', content: `Generate a course outline for the topic "${topic}" based on the following content:\n\n${content}` },
-      ],
-    });
-
-    const stream = OpenAIStream(response, {
-      async onFinal(completion) {
-        try {
-          const outline = JSON.parse(completion);
-          course.outline = outline;
-          await course.save();
-        } catch (error) {
-          console.error('Error parsing or saving outline:', error);
-        }
-      },
-    });
+    let stream;
+    if (activeLLM === 'gemini') {
+      const geminiResponse = await llm.generateContent({
+        contents: [{ role: 'user', parts: [{ text: `Generate a course outline for the topic "${topic}" based on the following content:\n\n${content}. The JSON should have a "modules" array, where each module has a "title" and a "resources" array. Each resource should have a "title", "link", and "snippet".` }] }],
+      });
+      stream = GoogleGenerativeAIStream(geminiResponse, {
+        async onFinal(completion) {
+          try {
+            const outline = JSON.parse(completion);
+            course.outline = outline;
+            await course.save();
+          } catch (error) {
+            console.error('Error parsing or saving outline:', error);
+          }
+        },
+      });
+    } else {
+      const openaiResponse = await llm.chat.completions.create({
+        model: 'gpt-3.5-turbo',
+        stream: true,
+        messages: [
+          { role: 'system', content: 'You are a helpful assistant that generates course outlines in JSON format. The JSON should have a "modules" array, where each module has a "title" and a "resources" array. Each resource should have a "title", "link", and "snippet".' },
+          { role: 'user', content: `Generate a course outline for the topic "${topic}" based on the following content:\n\n${content}` },
+        ],
+      });
+      stream = OpenAIStream(openaiResponse, {
+        async onFinal(completion) {
+          try {
+            const outline = JSON.parse(completion);
+            course.outline = outline;
+            await course.save();
+          } catch (error) {
+            console.error('Error parsing or saving outline:', error);
+          }
+        },
+      });
+    }
 
     return new StreamingTextResponse(stream);
   } catch (err) {
