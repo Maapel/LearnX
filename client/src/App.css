@@ -1,0 +1,83 @@
+.App {
+  text-align: center;
+  background-color: #282c34;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  font-size: calc(10px + 2vmin);
+  color: white;
+}
+
+.App-header {
+  background-color: #282c34;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  font-size: calc(10px + 2vmin);
+  color: white;
+}
+
+.App-link {
+  color: #61dafb;
+}
+
+input[type="text"] {
+  padding: 10px;
+  margin-right: 10px;
+  border-radius: 5px;
+  border: 1px solid #ccc;
+  font-size: 16px;
+}
+
+button {
+  padding: 10px 20px;
+  border-radius: 5px;
+  border: none;
+  background-color: #61dafb;
+  color: #282c34;
+  font-size: 16px;
+  cursor: pointer;
+}
+
+button:hover {
+  background-color: #21a1f1;
+}
+
+.scraped-links {
+  margin-top: 20px;
+  text-align: left;
+  width: 80%;
+  max-width: 600px;
+  background-color: #3a3f47;
+  padding: 20px;
+  border-radius: 8px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+}
+
+.scraped-links h2 {
+  color: #61dafb;
+  margin-bottom: 15px;
+}
+
+.scraped-links ul {
+  list-style: none;
+  padding: 0;
+}
+
+.scraped-links li {
+  margin-bottom: 10px;
+}
+
+.scraped-links a {
+  color: #a0e9ff;
+  text-decoration: none;
+  word-break: break-all;
+}
+
+.scraped-links a:hover {
+  text-decoration: underline;
+}
