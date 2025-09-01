@@ -49,4 +49,9 @@ This document tracks the development progress of the LearnX project.
 - [x] Installed `@google/generative-ai` package.
 - [x] Updated `.env` to include `GEMINI_API_KEY` and `ACTIVE_LLM` variable.
 - [x] Modified `ai.js` to dynamically choose between OpenAI and Gemini.
+- [x] Updated `PROGRESS.md` to reflect these changes.
+
+### Vercel Deployment Fixes
+- [x] Removed `vercel.json` for separate deployments.
+- [x] Updated `client/src/App.js` to use absolute backend API URL.
 - [ ] Update `PROGRESS.md` to reflect these changes.

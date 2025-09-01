@@ -8,8 +8,10 @@ function App() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
+      const API_BASE_URL = 'https://learn-x-a36u.vercel.app/api';
+
       // Scrape for the topic
-      await fetch('/api/scrape', {
+      await fetch(`${API_BASE_URL}/scrape`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -18,7 +20,7 @@ function App() {
       });
 
       // Process the scraped data
-      const res = await fetch('/api/ai/process', {
+      const res = await fetch(`${API_BASE_URL}/ai/process`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
