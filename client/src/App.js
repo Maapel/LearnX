@@ -8,7 +8,7 @@ function App() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      const API_BASE_URL = 'https://learn-x-a36u.vercel.app/api';
+const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || 'http://localhost:5000/api'; // Provide a sensible default for local development
 
       // Scrape for the topic
       await fetch(`${API_BASE_URL}/scrape`, {
