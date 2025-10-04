@@ -1,11 +1,12 @@
 const express = require('express');
 const router = express.Router();
-const axios = require('axios');
-const cheerio = require('cheerio');
-const google = require('google-it');
+const { google } = require('googleapis');
+
+// Initialize Google Custom Search API
+const customsearch = google.customsearch('v1');
 
 // @route   POST api/scrape
-// @desc    Scrape web content for a given topic
+// @desc    Scrape web content for a given topic using Google Custom Search API
 // @access  Public
 router.post('/', async (req, res) => {
   const { topic } = req.body;
@@ -16,35 +17,46 @@ router.post('/', async (req, res) => {
 
   try {
     console.log(`Searching for topic: ${topic}`);
-    // Use google-it to get initial search results
-    const searchResults = await google({ query: topic, limit: 5 }); // Limit to 5 results for efficiency
-    console.log('Google-it Search Results:', searchResults);
+
+    // Use Google Custom Search API
+    const response = await customsearch.cse.list({
+      cx: process.env.GOOGLE_CUSTOM_SEARCH_ENGINE_ID,
+      q: topic,
+      auth: process.env.GOOGLE_CUSTOM_SEARCH_API_KEY,
+      num: 5, // Limit to 5 results for efficiency
+    });
+
+    console.log('Google Custom Search API Response:', response.data);
 
     const links = [];
-    for (const result of searchResults) {
-      if (result && result.link) {
+    if (response.data.items) {
+      for (const item of response.data.items) {
         links.push({
-          title: result.title,
-          link: result.link,
-          snippet: result.snippet
+          title: item.title,
+          link: item.link,
+          snippet: item.snippet || item.displayLink
         });
       }
     }
 
-    // Filter out any null or undefined links
-    const filteredLinks = links.filter(link => link && link.link && link.link.startsWith('http'));
-    console.log('Filtered Links:', filteredLinks);
+    console.log('Filtered Links:', links);
 
-    // Return the scraped links directly (no database for now)
+    // Return the scraped links directly
     res.json({
       topic,
-      links: filteredLinks,
-      count: filteredLinks.length
+      links: links,
+      count: links.length,
+      searchInformation: response.data.searchInformation
     });
   } catch (err) {
-    console.error(err.message);
-    res.status(500).json({ msg: 'Server Error', error: err.message });
+    console.error('Google Custom Search API Error:', err.message);
+    res.status(500).json({
+      msg: 'Server Error',
+      error: err.message,
+      details: 'Failed to fetch search results from Google Custom Search API'
+    });
   }
 });
 
 module.exports = router;
+// AIzaSyCSb8ujMdmMsQ38XG2rZ_iHEWACl6CDaOs
