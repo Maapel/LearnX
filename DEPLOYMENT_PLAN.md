@@ -4,10 +4,12 @@
 ✅ Basic Vercel deployment working
 ✅ Frontend-backend communication established
 ✅ Simple test endpoint responding
-✅ **GOOGLE CUSTOM SEARCH API IMPLEMENTATION - DEPLOYED**
+✅ **GOOGLE CUSTOM SEARCH API + GEMINI AUTHENTICITY EVALUATION - DEPLOYED**
   - ✅ Google Custom Search API integration for course content
   - ✅ Text extraction and content aggregation from search results
   - ✅ Course-focused search queries with learning keywords
+  - ✅ **Optional Gemini API authenticity evaluation**
+  - ✅ **Displays most authentic source prominently**
   - ✅ Fallback system for API failures
   - ✅ **Ready for testing at https://learnx-v2.vercel.app/**
 

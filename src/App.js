@@ -6,6 +6,7 @@ function App() {
   const [topic, setTopic] = useState('');
   const [apiKey, setApiKey] = useState('');
   const [evaluateAuthenticity, setEvaluateAuthenticity] = useState(false);
+  const [provider, setProvider] = useState('gemini');
   const [course, setCourse] = useState(null);
 
   const handleSubmit = async (e) => {
@@ -22,6 +23,7 @@ function App() {
       if (evaluateAuthenticity && apiKey.trim()) {
         requestData.evaluateAuthenticity = true;
         requestData.apiKey = apiKey.trim();
+        requestData.provider = provider;
       }
 
       const response = await axios.post(`${API_BASE_URL}/scrape`, requestData);
@@ -103,16 +105,26 @@ function App() {
                 checked={evaluateAuthenticity}
                 onChange={(e) => setEvaluateAuthenticity(e.target.checked)}
               />
-              Evaluate source authenticity (requires Gemini API key)
+              Evaluate source authenticity (requires AI API key)
             </label>
 
             {evaluateAuthenticity && (
-              <input
-                type="password"
-                value={apiKey}
-                onChange={(e) => setApiKey(e.target.value)}
-                placeholder="Enter your Gemini API key"
-              />
+              <>
+                <select
+                  value={provider}
+                  onChange={(e) => setProvider(e.target.value)}
+                  className="provider-select"
+                >
+                  <option value="gemini">Gemini (Google)</option>
+                  <option value="groq">Groq (Fast AI)</option>
+                </select>
+                <input
+                  type="password"
+                  value={apiKey}
+                  onChange={(e) => setApiKey(e.target.value)}
+                  placeholder={`Enter your ${provider === 'gemini' ? 'Gemini' : 'Groq'} API key`}
+                />
+              </>
             )}
           </div>
 

@@ -66,12 +66,13 @@ This course content was extracted from ${searchResults.length} web sources to he
 Use this information as a starting point for your learning journey.
 `;
 
-    // Optionally evaluate authenticity using Gemini API
+    // Optionally evaluate authenticity using AI API (Gemini or Groq)
     let mostAuthenticSource = null;
     if (req.body.evaluateAuthenticity && req.body.apiKey) {
       try {
         console.log('Evaluating authenticity of search results...');
-        mostAuthenticSource = await evaluateAuthenticityWithGemini(searchResults, topic, req.body.apiKey);
+        const provider = req.body.provider || 'gemini'; // Default to gemini
+        mostAuthenticSource = await evaluateAuthenticity(searchResults, topic, req.body.apiKey, provider);
         console.log('Most authentic source:', mostAuthenticSource);
       } catch (authError) {
         console.error('Authenticity evaluation failed:', authError.message);
@@ -132,13 +133,9 @@ Practice regularly and build projects to reinforce your learning.
   }
 });
 
-// Helper function to evaluate authenticity of search results using Gemini API
-async function evaluateAuthenticityWithGemini(searchResults, topic, apiKey) {
+// Helper function to evaluate authenticity of search results using AI API
+async function evaluateAuthenticity(searchResults, topic, apiKey, provider = 'gemini') {
   try {
-    const { GoogleGenerativeAI } = require('@google/generative-ai');
-    const genAI = new GoogleGenerativeAI(apiKey);
-    const model = genAI.getGenerativeModel({ model: 'gemini-pro' });
-
     // Prepare the search results for evaluation
     const resultsText = searchResults.map((result, index) =>
       `Source ${index + 1}:
@@ -177,24 +174,70 @@ Return ONLY a JSON object in this exact format:
 Choose the single most authentic source from the provided results.
 `;
 
-    const result = await model.generateContent(evaluationPrompt);
-    const response = await result.response;
-    const aiResponse = response.text();
+    let aiResponse;
+
+    if (provider === 'groq') {
+      // Use Groq API
+      aiResponse = await evaluateWithGroq(evaluationPrompt, apiKey);
+    } else {
+      // Default to Gemini
+      aiResponse = await evaluateWithGemini(evaluationPrompt, apiKey);
+    }
 
     // Try to parse the JSON response
     try {
       const parsedResponse = JSON.parse(aiResponse);
       return parsedResponse.mostAuthenticSource;
     } catch (parseError) {
-      console.log('Failed to parse Gemini authenticity response as JSON:', aiResponse);
+      console.log(`Failed to parse ${provider} authenticity response as JSON:`, aiResponse);
       // Try to extract information from text response
       return extractAuthenticityFromText(aiResponse, searchResults);
     }
 
   } catch (error) {
-    console.error('Gemini authenticity evaluation error:', error);
-    throw new Error('Failed to evaluate authenticity with Gemini');
+    console.error(`${provider} authenticity evaluation error:`, error);
+    throw new Error(`Failed to evaluate authenticity with ${provider}`);
   }
+}
+
+// Helper function to evaluate with Gemini API
+async function evaluateWithGemini(prompt, apiKey) {
+  const { GoogleGenerativeAI } = require('@google/generative-ai');
+  const genAI = new GoogleGenerativeAI(apiKey);
+  const model = genAI.getGenerativeModel({ model: 'gemini-pro' });
+
+  const result = await model.generateContent(prompt);
+  const response = await result.response;
+  return response.text();
+}
+
+// Helper function to evaluate with Groq API
+async function evaluateWithGroq(prompt, apiKey) {
+  const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+    method: 'POST',
+    headers: {
+      'Authorization': `Bearer ${apiKey}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      model: 'llama3-8b-8192', // You can change this to other Groq models like 'mixtral-8x7b-32768'
+      messages: [
+        {
+          role: 'user',
+          content: prompt
+        }
+      ],
+      temperature: 0.3,
+      max_tokens: 1000,
+    }),
+  });
+
+  if (!response.ok) {
+    throw new Error(`Groq API error: ${response.status} ${response.statusText}`);
+  }
+
+  const data = await response.json();
+  return data.choices[0].message.content;
 }
 
 // Fallback function to extract authenticity info from text response

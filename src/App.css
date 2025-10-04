@@ -616,6 +616,28 @@ button:hover {
   box-shadow: 0 0 0 2px rgba(97, 218, 251, 0.2);
 }
 
+.provider-select {
+  width: 100%;
+  padding: 8px 12px;
+  margin-bottom: 10px;
+  border-radius: 5px;
+  border: 1px solid #4a5568;
+  background-color: #1a1d23;
+  color: #e2e8f0;
+  font-size: 0.9em;
+}
+
+.provider-select:focus {
+  outline: none;
+  border-color: #61dafb;
+  box-shadow: 0 0 0 2px rgba(97, 218, 251, 0.2);
+}
+
+.provider-select option {
+  background-color: #1a1d23;
+  color: #e2e8f0;
+}
+
 /* Most Authentic Source Display */
 .most-authentic-source {
   margin-bottom: 30px;
