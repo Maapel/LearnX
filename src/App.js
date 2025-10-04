@@ -19,34 +19,94 @@ function App() {
 
       console.log('Scraping response:', scrapeResponse.data);
 
-      // Step 2: Process with AI to generate course structure
-      const aiResponse = await axios.post(`${API_BASE_URL}/ai/process`, {
-        topic: topic,
-        resources: scrapeResponse.data.resources,
-        apiKey: apiKey // Include user's API key
-      });
+      // Check if we have valid resources from scraping
+      if (!scrapeResponse.data.resources || scrapeResponse.data.resources.length === 0) {
+        console.log('No resources found, using fallback');
+        setCourse({
+          topic: topic,
+          outline: {
+            modules: [{
+              title: 'Getting Started',
+              resources: [{
+                title: `Learning resources for ${topic}`,
+                link: '#',
+                snippet: 'No resources found. Try a different topic or check your search configuration.',
+                type: 'article'
+              }]
+            }]
+          }
+        });
+        return;
+      }
 
-      console.log('AI processing response:', aiResponse.data);
+      // Step 2: Process with AI to generate course structure (only if API key is provided)
+      if (apiKey && apiKey.trim()) {
+        try {
+          const aiResponse = await axios.post(`${API_BASE_URL}/ai/process`, {
+            topic: topic,
+            resources: scrapeResponse.data.resources,
+            apiKey: apiKey // Include user's API key
+          });
 
-      // Use the AI-generated course structure
-      const aiData = aiResponse.data;
+          console.log('AI processing response:', aiResponse.data);
 
-      setCourse({
-        topic: aiData.topic,
-        outline: {
-          modules: aiData.courseStructure.modules.map(module => ({
-            title: module.title,
-            duration: module.duration,
-            difficulty: module.difficulty,
-            learningObjectives: module.learningObjectives,
-            keyConcepts: module.keyConcepts,
-            exercises: module.exercises,
-            resources: module.resources
-          }))
-        },
-        resourcesProcessed: aiData.resourcesProcessed,
-        generatedAt: aiData.generatedAt
-      });
+          // Use the AI-generated course structure
+          const aiData = aiResponse.data;
+
+          setCourse({
+            topic: aiData.topic,
+            outline: {
+              modules: aiData.courseStructure.modules.map(module => ({
+                title: module.title,
+                duration: module.duration,
+                difficulty: module.difficulty,
+                learningObjectives: module.learningObjectives,
+                keyConcepts: module.keyConcepts,
+                exercises: module.exercises,
+                resources: module.resources
+              }))
+            },
+            resourcesProcessed: aiData.resourcesProcessed,
+            generatedAt: aiData.generatedAt
+          });
+        } catch (aiError) {
+          console.error('AI processing failed, falling back to organized resources:', aiError);
+          // Fall back to organized scraped resources if AI fails
+          setCourse({
+            topic: scrapeResponse.data.topic,
+            outline: {
+              modules: scrapeResponse.data.modules.map(module => ({
+                title: module.title,
+                resources: module.resources.map(resource => ({
+                  title: resource.title,
+                  link: resource.url,
+                  snippet: resource.content || resource.snippet,
+                  type: resource.type,
+                  scraped: resource.scraped
+                }))
+              }))
+            }
+          });
+        }
+      } else {
+        // No API key provided, use organized scraped resources
+        console.log('No API key provided, using organized resources');
+        setCourse({
+          topic: scrapeResponse.data.topic,
+          outline: {
+            modules: scrapeResponse.data.modules.map(module => ({
+              title: module.title,
+              resources: module.resources.map(resource => ({
+                title: resource.title,
+                link: resource.url,
+                snippet: resource.content || resource.snippet,
+                type: resource.type,
+                scraped: resource.scraped
+              }))
+            }))
+          }
+        });
+      }
     } catch (err) {
       console.error('Course generation error:', err);
       setCourse({

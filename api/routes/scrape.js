@@ -32,22 +32,36 @@ router.post('/', async (req, res) => {
       safe: 'active', // Filter explicit content
     });
 
+    console.log('Google Custom Search API Response received');
+
+    // Check if we got a valid response
+    if (!response.data || !response.data.items) {
+      console.log('No search results found, returning fallback data');
+      return res.json({
+        topic,
+        resources: [],
+        modules: [],
+        count: 0,
+        message: 'No search results found'
+      });
+    }
+
     console.log('Google Custom Search API Response:', response.data);
 
     const resources = [];
-    if (response.data.items) {
-      for (const item of response.data.items) {
+    for (const item of response.data.items) {
+      try {
         const resource = {
-          title: item.title,
-          url: item.link,
-          snippet: item.snippet || item.displayLink,
-          displayLink: item.displayLink,
-          type: getResourceType(item.link, item.title),
-          content: null, // Will be filled by scraping
+          title: item.title || 'Untitled',
+          url: item.link || '',
+          snippet: item.snippet || item.displayLink || 'No description available',
+          displayLink: item.displayLink || '',
+          type: getResourceType(item.link || '', item.title || ''),
+          content: null,
           scraped: false
         };
 
-        // Try to scrape actual content from the page
+        // Try to scrape actual content from the page (with error handling)
         try {
           const scrapedContent = await scrapePageContent(item.link);
           if (scrapedContent) {
@@ -56,13 +70,17 @@ router.post('/', async (req, res) => {
           }
         } catch (scrapeError) {
           console.log(`Failed to scrape ${item.link}:`, scrapeError.message);
+          // Continue without scraped content
         }
 
         resources.push(resource);
+      } catch (itemError) {
+        console.log('Error processing item:', itemError.message);
+        // Continue with next item
       }
     }
 
-    console.log(`Found ${resources.length} learning resources`);
+    console.log(`Successfully processed ${resources.length} learning resources`);
 
     // Organize resources into potential modules
     const modules = organizeIntoModules(topic, resources);
@@ -73,14 +91,42 @@ router.post('/', async (req, res) => {
       resources: resources,
       modules: modules,
       count: resources.length,
-      searchInformation: response.data.searchInformation
+      searchInformation: response.data.searchInformation || {}
     });
   } catch (err) {
     console.error('Scraping Error:', err.message);
-    res.status(500).json({
-      msg: 'Server Error',
-      error: err.message,
-      details: 'Failed to search or scrape learning resources'
+    console.error('Full error:', err);
+
+    // Return a fallback response instead of 500 error
+    res.status(200).json({
+      topic,
+      resources: [
+        {
+          title: `Learning resources for ${topic}`,
+          url: '#',
+          snippet: 'Unable to fetch live search results. Please try again later.',
+          displayLink: 'LearnX',
+          type: 'article',
+          content: null,
+          scraped: false
+        }
+      ],
+      modules: [
+        {
+          title: 'Getting Started',
+          resources: [
+            {
+              title: `Learn ${topic}`,
+              url: '#',
+              snippet: 'Start your learning journey with this comprehensive topic.',
+              type: 'tutorial'
+            }
+          ]
+        }
+      ],
+      count: 1,
+      message: 'Using fallback response due to API error',
+      error: err.message
     });
   }
 });
