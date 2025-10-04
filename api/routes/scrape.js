@@ -247,7 +247,7 @@ async function evaluateWithGroq(prompt, apiKey) {
       'Content-Type': 'application/json',
     },
     body: JSON.stringify({
-      model: 'llama3-8b-8192', // Try a different model that should be available
+      model: 'llama-3.3-70b-versatile', // Working model
       messages: [
         {
           role: 'user',
