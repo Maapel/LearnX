@@ -69,6 +69,7 @@ Use this information as a starting point for your learning journey.
     // Optionally evaluate authenticity using AI API (Gemini or Groq)
     let mostAuthenticSource = null;
     let courseStructure = null;
+    let aiError = null;
 
     if (req.body.evaluateAuthenticity && req.body.apiKey && req.body.apiKey.trim()) {
       try {
@@ -86,6 +87,7 @@ Use this information as a starting point for your learning journey.
       } catch (authError) {
         console.error('Authenticity evaluation failed:', authError.message);
         console.error('Full auth error:', authError);
+        aiError = authError.message;
         // Continue without authenticity evaluation - don't fail the whole request
         mostAuthenticSource = null;
       }
@@ -99,7 +101,8 @@ Use this information as a starting point for your learning journey.
       count: searchResults.length,
       searchInformation: response.data.searchInformation || {},
       mostAuthenticSource: mostAuthenticSource,
-      courseStructure: courseStructure
+      courseStructure: courseStructure,
+      aiError: aiError
     });
 
   } catch (err) {
@@ -244,7 +247,7 @@ async function evaluateWithGroq(prompt, apiKey) {
       'Content-Type': 'application/json',
     },
     body: JSON.stringify({
-      model: 'llama-3.3-70b-versatile', // Updated to match working model from curl test
+      model: 'llama3-8b-8192', // Try a different model that should be available
       messages: [
         {
           role: 'user',
