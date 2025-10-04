@@ -81,3 +81,198 @@ button:hover {
 .scraped-links a:hover {
   text-decoration: underline;
 }
+
+/* Enhanced Course Display Styles */
+.course-outline {
+  margin-top: 30px;
+  text-align: left;
+  width: 90%;
+  max-width: 800px;
+  background-color: #3a3f47;
+  padding: 25px;
+  border-radius: 12px;
+  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.3);
+}
+
+.course-outline h2 {
+  color: #61dafb;
+  margin-bottom: 25px;
+  text-align: center;
+  font-size: 1.8em;
+}
+
+.course-outline h3 {
+  color: #a0e9ff;
+  margin: 25px 0 15px 0;
+  padding: 10px 15px;
+  background-color: #2a2f37;
+  border-radius: 8px;
+  border-left: 4px solid #61dafb;
+}
+
+.course-outline ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.resource-item {
+  margin-bottom: 20px;
+  padding: 15px;
+  background-color: #2a2f37;
+  border-radius: 8px;
+  border-left: 3px solid #4a90e2;
+  transition: all 0.3s ease;
+}
+
+.resource-item:hover {
+  background-color: #353a43;
+  transform: translateX(5px);
+}
+
+.resource-item.video {
+  border-left-color: #ff6b6b;
+}
+
+.resource-item.tutorial {
+  border-left-color: #4ecdc4;
+}
+
+.resource-item.reference {
+  border-left-color: #45b7d1;
+}
+
+.resource-item.qa {
+  border-left-color: #f9ca24;
+}
+
+.resource-item.code {
+  border-left-color: #6c5ce7;
+}
+
+.resource-item.educational {
+  border-left-color: #a29bfe;
+}
+
+.resource-item.article {
+  border-left-color: #fd79a8;
+}
+
+.resource-item.error {
+  border-left-color: #e74c3c;
+  background-color: #2d1b1b;
+}
+
+.resource-header {
+  display: flex;
+  align-items: center;
+  margin-bottom: 10px;
+  gap: 10px;
+}
+
+.resource-header a {
+  color: #a0e9ff;
+  text-decoration: none;
+  font-weight: 600;
+  font-size: 1.1em;
+  flex: 1;
+}
+
+.resource-header a:hover {
+  text-decoration: underline;
+  color: #61dafb;
+}
+
+.resource-type {
+  padding: 4px 8px;
+  border-radius: 12px;
+  font-size: 0.8em;
+  font-weight: bold;
+  text-transform: uppercase;
+}
+
+.resource-type.video {
+  background-color: #ff6b6b;
+  color: white;
+}
+
+.resource-type.tutorial {
+  background-color: #4ecdc4;
+  color: white;
+}
+
+.resource-type.reference {
+  background-color: #45b7d1;
+  color: white;
+}
+
+.resource-type.qa {
+  background-color: #f9ca24;
+  color: #2d3436;
+}
+
+.resource-type.code {
+  background-color: #6c5ce7;
+  color: white;
+}
+
+.resource-type.educational {
+  background-color: #a29bfe;
+  color: white;
+}
+
+.resource-type.article {
+  background-color: #fd79a8;
+  color: white;
+}
+
+.resource-type.error {
+  background-color: #e74c3c;
+  color: white;
+}
+
+.scraped-badge {
+  padding: 2px 6px;
+  background-color: #27ae60;
+  color: white;
+  border-radius: 8px;
+  font-size: 0.75em;
+  font-weight: bold;
+}
+
+.resource-snippet {
+  color: #bdc3c7;
+  margin: 0;
+  line-height: 1.5;
+  font-size: 0.95em;
+}
+
+.resource-content {
+  margin-top: 10px;
+  border: 1px solid #4a5568;
+  border-radius: 6px;
+  background-color: #1a1d23;
+}
+
+.resource-content summary {
+  padding: 10px;
+  cursor: pointer;
+  background-color: #2d3748;
+  border-radius: 6px;
+  margin-bottom: 10px;
+  color: #a0aec0;
+  font-weight: 500;
+}
+
+.resource-content summary:hover {
+  background-color: #4a5568;
+}
+
+.extracted-content {
+  padding: 15px;
+  color: #e2e8f0;
+  line-height: 1.6;
+  font-size: 0.9em;
+  white-space: pre-wrap;
+  margin: 0;
+}

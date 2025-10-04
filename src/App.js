@@ -11,39 +11,43 @@ function App() {
     try {
       const API_BASE_URL = '/api';
 
-      // Call the scraping endpoint
+      // Call the enhanced scraping endpoint
       const response = await axios.post(`${API_BASE_URL}/scrape`, {
         topic: topic
       });
 
-      console.log('Scraping response:', response.data);
+      console.log('Enhanced scraping response:', response.data);
 
-      // Transform the scraped links into a course format for display
-      const scrapedData = response.data;
+      // Use the organized modules from the backend
+      const enhancedData = response.data;
+
       setCourse({
-        topic: scrapedData.topic,
+        topic: enhancedData.topic,
         outline: {
-          modules: [{
-            title: 'Learning Resources',
-            resources: scrapedData.links.map(link => ({
-              title: link.title,
-              link: link.link,
-              snippet: link.snippet
+          modules: enhancedData.modules.map(module => ({
+            title: module.title,
+            resources: module.resources.map(resource => ({
+              title: resource.title,
+              link: resource.url,
+              snippet: resource.content || resource.snippet,
+              type: resource.type,
+              scraped: resource.scraped
             }))
-          }]
+          }))
         }
       });
     } catch (err) {
-      console.error('Scraping error:', err);
+      console.error('Enhanced scraping error:', err);
       setCourse({
         topic: topic,
         outline: {
           modules: [{
             title: 'Error',
             resources: [{
-              title: 'Failed to fetch resources',
+              title: 'Failed to fetch learning resources',
               link: '#',
-              snippet: err.response?.data?.msg || err.message
+              snippet: err.response?.data?.msg || err.message,
+              type: 'error'
             }]
           }]
         }
@@ -72,11 +76,25 @@ function App() {
                 <h3>{module.title}</h3>
                 <ul>
                   {module.resources.map((resource, i) => (
-                    <li key={i}>
-                      <a href={resource.link} target="_blank" rel="noopener noreferrer">
-                        {resource.title}
-                      </a>
-                      <p>{resource.snippet}</p>
+                    <li key={i} className={`resource-item ${resource.type}`}>
+                      <div className="resource-header">
+                        <a href={resource.link} target="_blank" rel="noopener noreferrer">
+                          {resource.title}
+                        </a>
+                        <span className={`resource-type ${resource.type}`}>
+                          {resource.type}
+                        </span>
+                        {resource.scraped && (
+                          <span className="scraped-badge">✓ Content Extracted</span>
+                        )}
+                      </div>
+                      <p className="resource-snippet">{resource.snippet}</p>
+                      {resource.content && resource.content !== resource.snippet && (
+                        <details className="resource-content">
+                          <summary>View Extracted Content</summary>
+                          <p className="extracted-content">{resource.content}</p>
+                        </details>
+                      )}
                     </li>
                   ))}
                 </ul>
