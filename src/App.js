@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import './App.css';
 import axios from 'axios';
 
@@ -8,39 +8,6 @@ function App() {
   const [evaluateAuthenticity, setEvaluateAuthenticity] = useState(false);
   const [provider, setProvider] = useState('gemini');
   const [course, setCourse] = useState(null);
-
-  // Load saved preferences from localStorage on component mount
-  useEffect(() => {
-    const savedApiKey = localStorage.getItem('learnx_api_key');
-    const savedProvider = localStorage.getItem('learnx_provider');
-    const savedEvaluateAuthenticity = localStorage.getItem('learnx_evaluate_authenticity');
-
-    if (savedApiKey) {
-      setApiKey(savedApiKey);
-    }
-    if (savedProvider) {
-      setProvider(savedProvider);
-    }
-    if (savedEvaluateAuthenticity) {
-      setEvaluateAuthenticity(savedEvaluateAuthenticity === 'true');
-    }
-  }, []);
-
-  // Save preferences to localStorage when they change
-  const updateApiKey = (value) => {
-    setApiKey(value);
-    localStorage.setItem('learnx_api_key', value);
-  };
-
-  const updateProvider = (value) => {
-    setProvider(value);
-    localStorage.setItem('learnx_provider', value);
-  };
-
-  const updateEvaluateAuthenticity = (value) => {
-    setEvaluateAuthenticity(value);
-    localStorage.setItem('learnx_evaluate_authenticity', value.toString());
-  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -136,7 +103,7 @@ function App() {
               <input
                 type="checkbox"
                 checked={evaluateAuthenticity}
-                onChange={(e) => updateEvaluateAuthenticity(e.target.checked)}
+                onChange={(e) => setEvaluateAuthenticity(e.target.checked)}
               />
               Evaluate source authenticity (requires AI API key)
             </label>
@@ -145,7 +112,7 @@ function App() {
               <>
                 <select
                   value={provider}
-                  onChange={(e) => updateProvider(e.target.value)}
+                  onChange={(e) => setProvider(e.target.value)}
                   className="provider-select"
                 >
                   <option value="gemini">Gemini (Google)</option>
@@ -154,7 +121,7 @@ function App() {
                 <input
                   type="password"
                   value={apiKey}
-                  onChange={(e) => updateApiKey(e.target.value)}
+                  onChange={(e) => setApiKey(e.target.value)}
                   placeholder={`Enter your ${provider === 'gemini' ? 'Gemini' : 'Groq'} API key`}
                 />
               </>
