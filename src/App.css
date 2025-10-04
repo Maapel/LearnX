@@ -478,3 +478,99 @@ button:hover {
   text-decoration: underline;
   color: #e67e22;
 }
+
+/* Course Content Display Styles */
+.course-content {
+  margin-bottom: 30px;
+  padding: 20px;
+  background-color: #2a2f37;
+  border-radius: 12px;
+  border-left: 4px solid #61dafb;
+}
+
+.course-content h3 {
+  color: #61dafb;
+  margin-bottom: 15px;
+  font-size: 1.3em;
+}
+
+.content-text {
+  line-height: 1.6;
+  color: #e2e8f0;
+  font-size: 1em;
+  white-space: pre-wrap;
+}
+
+.content-text p {
+  margin: 10px 0;
+  padding: 0;
+}
+
+.search-results {
+  margin-bottom: 30px;
+  padding: 20px;
+  background-color: #2a2f37;
+  border-radius: 12px;
+  border-left: 4px solid #4ecdc4;
+}
+
+.search-results h3 {
+  color: #4ecdc4;
+  margin-bottom: 15px;
+  font-size: 1.2em;
+}
+
+.search-result-item {
+  margin-bottom: 15px;
+  padding: 15px;
+  background-color: #1a1d23;
+  border-radius: 8px;
+  border-left: 3px solid #3498db;
+}
+
+.result-header {
+  display: flex;
+  flex-direction: column;
+  margin-bottom: 8px;
+}
+
+.result-header a {
+  color: #a0e9ff;
+  text-decoration: none;
+  font-weight: 600;
+  font-size: 1.1em;
+  margin-bottom: 5px;
+}
+
+.result-header a:hover {
+  text-decoration: underline;
+  color: #61dafb;
+}
+
+.result-domain {
+  color: #95a5a6;
+  font-size: 0.85em;
+  font-weight: 500;
+}
+
+.result-snippet {
+  color: #bdc3c7;
+  line-height: 1.5;
+  margin: 0;
+  font-size: 0.95em;
+}
+
+.fallback-notice {
+  margin: 20px 0;
+  padding: 15px;
+  background-color: #2d1b1b;
+  border: 1px solid #e74c3c;
+  border-radius: 8px;
+  text-align: center;
+}
+
+.fallback-notice p {
+  color: #f39c12;
+  margin: 0;
+  font-weight: 500;
+}

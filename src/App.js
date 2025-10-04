@@ -18,21 +18,43 @@ function App() {
 
       console.log('Scraping response:', response.data);
 
-      // Transform the scraped links into a course format for display
-      const scrapedData = response.data;
-      setCourse({
-        topic: scrapedData.topic,
-        outline: {
-          modules: [{
-            title: 'Learning Resources',
-            resources: scrapedData.links.map(link => ({
-              title: link.title,
-              link: link.link,
-              snippet: link.snippet
-            }))
-          }]
-        }
-      });
+      // Handle the response data (content + search results format)
+      const data = response.data;
+
+      if (data.content) {
+        // New format with extracted course content
+        setCourse({
+          topic: data.topic,
+          content: data.content,
+          searchResults: data.searchResults || [],
+          count: data.count || 0,
+          fallback: data.fallback || false
+        });
+      } else if (data.links) {
+        // Old format with links array
+        setCourse({
+          topic: data.topic,
+          outline: {
+            modules: [{
+              title: 'Learning Resources',
+              resources: data.links.map(link => ({
+                title: link.title,
+                link: link.link,
+                snippet: link.snippet
+              }))
+            }]
+          }
+        });
+      } else {
+        // Fallback for unknown format
+        setCourse({
+          topic: data.topic || topic,
+          content: `Course content for ${topic} - format unknown`,
+          searchResults: [],
+          count: 0,
+          fallback: true
+        });
+      }
     } catch (err) {
       console.error('Scraping error:', err);
       setCourse({
@@ -64,24 +86,67 @@ function App() {
           />
           <button type="submit">Generate Course</button>
         </form>
-        {course && course.outline && course.outline.modules && (
+        {course && (
           <div className="course-outline">
             <h2>{course.topic}</h2>
-            {course.outline.modules.map((module, index) => (
-              <div key={index}>
-                <h3>{module.title}</h3>
-                <ul>
-                  {module.resources.map((resource, i) => (
-                    <li key={i}>
-                      <a href={resource.link} target="_blank" rel="noopener noreferrer">
-                        {resource.title}
-                      </a>
-                      <p>{resource.snippet}</p>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            ))}
+
+            {course.content && (
+              <>
+                <div className="course-content">
+                  <h3>Course Content</h3>
+                  <div className="content-text">
+                    {course.content.split('\n').map((line, index) => (
+                      <p key={index}>{line}</p>
+                    ))}
+                  </div>
+                </div>
+
+                {course.searchResults && course.searchResults.length > 0 && (
+                  <div className="search-results">
+                    <h3>Search Results ({course.count})</h3>
+                    <ul>
+                      {course.searchResults.map((result, index) => (
+                        <li key={index} className="search-result-item">
+                          <div className="result-header">
+                            <a href={result.url} target="_blank" rel="noopener noreferrer">
+                              {result.title}
+                            </a>
+                            <span className="result-domain">{result.displayLink}</span>
+                          </div>
+                          <p className="result-snippet">{result.snippet}</p>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+
+                {course.fallback && (
+                  <div className="fallback-notice">
+                    <p>⚠️ Using fallback content - Live search results may be temporarily unavailable</p>
+                  </div>
+                )}
+              </>
+            )}
+
+            {course.outline && course.outline.modules && (
+              <>
+                {course.outline.modules.map((module, index) => (
+                  <div key={index}>
+                    <h3>{module.title}</h3>
+                    <ul>
+                      {module.resources.map((resource, i) => (
+                        <li key={i}>
+                          <a href={resource.link} target="_blank" rel="noopener noreferrer">
+                            {resource.title}
+                          </a>
+                          <p>{resource.snippet}</p>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                ))}
+              </>
+            )}
           </div>
         )}
       </header>
