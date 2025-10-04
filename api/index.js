@@ -10,6 +10,7 @@ app.set('port', (process.env.PORT || 8081));
 
 // Import routes
 const scrapeRoute = require('./routes/scrape');
+const aiRoute = require('./routes/ai');
 
 // Test endpoint
 app.get('/api', (req, res) => {
@@ -18,6 +19,9 @@ app.get('/api', (req, res) => {
 
 // Scraping endpoint
 app.use('/api/scrape', scrapeRoute);
+
+// AI processing endpoint
+app.use('/api/ai', aiRoute);
 
 app.listen(app.get('port'), function() {
   console.log('Express app vercel-express-react-demo is running on port', app.get('port'));
