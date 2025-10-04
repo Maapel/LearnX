@@ -11,7 +11,6 @@
   - ✅ **Optional AI authenticity evaluation (Gemini or Groq)**
   - ✅ **Provider selection dropdown (Gemini/Google or Groq/Fast AI)**
   - ✅ **Displays most authentic source prominently with reasoning**
-  - ✅ **localStorage persistence for API keys and preferences**
   - ✅ Fallback system for API failures
   - ✅ **Ready for testing at https://learnx-v2.vercel.app/**
 

@@ -188,11 +188,23 @@ Choose the single most authentic source from the provided results.
 
     // Try to parse the JSON response
     try {
+      // First try direct parsing
       const parsedResponse = JSON.parse(aiResponse);
       return parsedResponse.mostAuthenticSource;
     } catch (parseError) {
       console.log(`Failed to parse ${provider} authenticity response as JSON:`, aiResponse);
-      // Try to extract information from text response
+      // Try to extract JSON from the response text
+      try {
+        // Look for JSON object in the text
+        const jsonMatch = aiResponse.match(/\{[\s\S]*\}/);
+        if (jsonMatch) {
+          const extractedJson = JSON.parse(jsonMatch[0]);
+          return extractedJson.mostAuthenticSource;
+        }
+      } catch (extractError) {
+        console.log('Failed to extract JSON from response:', extractError);
+      }
+      // Fallback to text extraction
       return extractAuthenticityFromText(aiResponse, searchResults);
     }
 
