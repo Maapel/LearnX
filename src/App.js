@@ -9,21 +9,45 @@ function App() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-const API_BASE_URL = '/api';
+      const API_BASE_URL = '/api';
 
+      // Call the scraping endpoint
+      const response = await axios.post(`${API_BASE_URL}/scrape`, {
+        topic: topic
+      });
 
-      axios.get(`${API_BASE_URL}`).then((data) => {
-    //this console.log will be in our frontend console
-     console.log("hi");
+      console.log('Scraping response:', response.data);
 
-      console.log(data);
-      setCourse({ topic: data.message, outline: { modules: [] } });
-    console.log(data)
-  })
-     
-     
+      // Transform the scraped links into a course format for display
+      const scrapedData = response.data;
+      setCourse({
+        topic: scrapedData.topic,
+        outline: {
+          modules: [{
+            title: 'Learning Resources',
+            resources: scrapedData.links.map(link => ({
+              title: link.title,
+              link: link.link,
+              snippet: link.snippet
+            }))
+          }]
+        }
+      });
     } catch (err) {
-      console.error(err);
+      console.error('Scraping error:', err);
+      setCourse({
+        topic: topic,
+        outline: {
+          modules: [{
+            title: 'Error',
+            resources: [{
+              title: 'Failed to fetch resources',
+              link: '#',
+              snippet: err.response?.data?.msg || err.message
+            }]
+          }]
+        }
+      });
     }
   };
 
