@@ -68,15 +68,17 @@ Use this information as a starting point for your learning journey.
 
     // Optionally evaluate authenticity using AI API (Gemini or Groq)
     let mostAuthenticSource = null;
-    if (req.body.evaluateAuthenticity && req.body.apiKey) {
+    if (req.body.evaluateAuthenticity && req.body.apiKey && req.body.apiKey.trim()) {
       try {
-        console.log('Evaluating authenticity of search results...');
-        const provider = req.body.provider || 'gemini'; // Default to gemini
-        mostAuthenticSource = await evaluateAuthenticity(searchResults, topic, req.body.apiKey, provider);
-        console.log('Most authentic source:', mostAuthenticSource);
+        console.log('Evaluating authenticity of search results with provider:', req.body.provider || 'gemini');
+        const provider = req.body.provider || 'gemini';
+        mostAuthenticSource = await evaluateAuthenticity(searchResults, topic, req.body.apiKey.trim(), provider);
+        console.log('Most authentic source evaluation completed');
       } catch (authError) {
         console.error('Authenticity evaluation failed:', authError.message);
-        // Continue without authenticity evaluation
+        console.error('Full auth error:', authError);
+        // Continue without authenticity evaluation - don't fail the whole request
+        mostAuthenticSource = null;
       }
     }
 
@@ -220,7 +222,7 @@ async function evaluateWithGroq(prompt, apiKey) {
       'Content-Type': 'application/json',
     },
     body: JSON.stringify({
-      model: 'llama3-8b-8192', // You can change this to other Groq models like 'mixtral-8x7b-32768'
+      model: 'llama-3.3-70b-versatile', // Updated to match working model from curl test
       messages: [
         {
           role: 'user',
