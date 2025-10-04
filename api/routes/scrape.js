@@ -75,6 +75,7 @@ Use this information as a starting point for your learning journey.
       try {
         console.log('Evaluating authenticity of search results with provider:', req.body.provider || 'gemini');
         console.log('API Key provided (first 10 chars):', req.body.apiKey.trim().substring(0, 10));
+        console.log('Search results count:', searchResults.length);
         const provider = req.body.provider || 'gemini';
         mostAuthenticSource = await evaluateAuthenticity(searchResults, topic, req.body.apiKey.trim(), provider);
         console.log('Most authentic source evaluation completed:', mostAuthenticSource);
