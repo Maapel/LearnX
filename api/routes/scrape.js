@@ -8,6 +8,7 @@ const Course = require('../models/Course');
 // @route   POST api/scrape
 // @desc    Scrape web content for a given topic
 // @access  Public
+/*
 router.post('/', async (req, res) => {
   const { topic } = req.body;
 
@@ -49,5 +50,6 @@ router.post('/', async (req, res) => {
     res.status(500).send('Server Error');
   }
 });
+*/
 
 module.exports = router;

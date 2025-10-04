@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import './App.css';
+import axios from 'axios';
 
 function App() {
   const [topic, setTopic] = useState('');
@@ -8,27 +9,19 @@ function App() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || 'http://localhost:5000/api'; // Provide a sensible default for local development
+const API_BASE_URL = '/api';
 
-      // Scrape for the topic
-      await fetch(`${API_BASE_URL}/scrape`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ topic }),
-      });
 
-      // Process the scraped data
-      const res = await fetch(`${API_BASE_URL}/ai/process`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ topic }),
-      });
-      const data = await res.json();
-      setCourse(data);
+      axios.get(`${API_BASE_URL}`).then((data) => {
+    //this console.log will be in our frontend console
+     console.log("hi");
+
+      console.log(data);
+      setCourse({ topic: data.message, outline: { modules: [] } });
+    console.log(data)
+  })
+     
+     
     } catch (err) {
       console.error(err);
     }

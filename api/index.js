@@ -1,34 +1,18 @@
+
 const express = require('express');
-const mongoose = require('mongoose');
-const dotenv = require('dotenv');
-const cors = require('cors'); // Import cors
-
-dotenv.config();
-
 const app = express();
-const PORT = process.env.PORT || 5000;
+const cors = require('cors');
 
-// Middleware
-app.use(express.json());
-// Configure CORS to allow requests from your frontend domain
-const corsOptions = {
-  origin: 'https://learn-x-blond.vercel.app', // Replace with your actual frontend URL
-  optionsSuccessStatus: 200 // some legacy browsers (IE11, various SmartTVs) choke on 204
-};
-app.use(cors(corsOptions)); // Use cors middleware with specific options
+app.use(cors())
 
-// Database Connection
-mongoose.connect(process.env.MONGO_URI)
-  .then(() => console.log('MongoDB connected'))
-  .catch(err => console.error(err));
+app.set('port', (process.env.PORT || 8081));
 
-// Basic route
-app.get('/', (req, res) => {
-  res.send('LearnX Backend API');
+app.get('/api', (req, res) => {
+      res.send('Hello from our server!')
+})
+
+app.listen(app.get('port'), function() {
+  console.log('Express app vercel-express-react-demo is running on port', app.get('port'));
 });
 
-// Use Routes
-app.use('/api/scrape', require('./routes/scrape'));
-app.use('/api/ai', require('./routes/ai'));
-
-module.exports = app;
+module.exports = app	
