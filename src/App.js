@@ -4,7 +4,6 @@ import axios from 'axios';
 
 function App() {
   const [topic, setTopic] = useState('');
-  const [apiKey, setApiKey] = useState('');
   const [course, setCourse] = useState(null);
 
   const handleSubmit = async (e) => {
@@ -12,43 +11,39 @@ function App() {
     try {
       const API_BASE_URL = '/api';
 
-      // Simple API call to get learning resources
+      // Call the scraping endpoint
       const response = await axios.post(`${API_BASE_URL}/scrape`, {
         topic: topic
       });
 
-      console.log('Response:', response.data);
+      console.log('Scraping response:', response.data);
 
-      // Use the response data directly
-      const data = response.data;
-
+      // Transform the scraped links into a course format for display
+      const scrapedData = response.data;
       setCourse({
-        topic: data.topic,
+        topic: scrapedData.topic,
         outline: {
-          modules: data.modules.map(module => ({
-            title: module.title,
-            resources: module.resources.map(resource => ({
-              title: resource.title,
-              link: resource.url,
-              snippet: resource.content || resource.snippet,
-              type: resource.type,
-              scraped: resource.scraped
+          modules: [{
+            title: 'Learning Resources',
+            resources: scrapedData.links.map(link => ({
+              title: link.title,
+              link: link.link,
+              snippet: link.snippet
             }))
-          }))
+          }]
         }
       });
     } catch (err) {
-      console.error('Error:', err);
+      console.error('Scraping error:', err);
       setCourse({
         topic: topic,
         outline: {
           modules: [{
-            title: 'Getting Started',
+            title: 'Error',
             resources: [{
-              title: `Learning ${topic}`,
+              title: 'Failed to fetch resources',
               link: '#',
-              snippet: 'Basic learning resources for this topic.',
-              type: 'article'
+              snippet: err.response?.data?.msg || err.message
             }]
           }]
         }
@@ -67,42 +62,21 @@ function App() {
             onChange={(e) => setTopic(e.target.value)}
             placeholder="Enter a topic"
           />
-          <input
-            type="password"
-            value={apiKey}
-            onChange={(e) => setApiKey(e.target.value)}
-            placeholder="Enter your AI API key (OpenAI/Gemini)"
-          />
           <button type="submit">Generate Course</button>
         </form>
         {course && course.outline && course.outline.modules && (
           <div className="course-outline">
             <h2>{course.topic}</h2>
-
             {course.outline.modules.map((module, index) => (
               <div key={index}>
                 <h3>{module.title}</h3>
                 <ul>
                   {module.resources.map((resource, i) => (
-                    <li key={i} className={`resource-item ${resource.type}`}>
-                      <div className="resource-header">
-                        <a href={resource.link} target="_blank" rel="noopener noreferrer">
-                          {resource.title}
-                        </a>
-                        <span className={`resource-type ${resource.type}`}>
-                          {resource.type}
-                        </span>
-                        {resource.scraped && (
-                          <span className="scraped-badge">✓ Content Available</span>
-                        )}
-                      </div>
-                      <p className="resource-snippet">{resource.snippet}</p>
-                      {resource.content && resource.content !== resource.snippet && (
-                        <details className="resource-content">
-                          <summary>View Content</summary>
-                          <p className="extracted-content">{resource.content}</p>
-                        </details>
-                      )}
+                    <li key={i}>
+                      <a href={resource.link} target="_blank" rel="noopener noreferrer">
+                        {resource.title}
+                      </a>
+                      <p>{resource.snippet}</p>
                     </li>
                   ))}
                 </ul>
