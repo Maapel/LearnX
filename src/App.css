@@ -692,3 +692,104 @@ button:hover {
   font-size: 0.95em;
   font-style: italic;
 }
+
+/* Course Structure Styles */
+.course-structure {
+  margin-top: 30px;
+  padding: 20px;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  border-radius: 12px;
+  color: white;
+}
+
+.course-structure h3 {
+  margin-top: 0;
+  color: white;
+  text-align: center;
+  font-size: 1.8em;
+}
+
+.course-structure-content {
+  background: rgba(255, 255, 255, 0.1);
+  padding: 20px;
+  border-radius: 8px;
+  backdrop-filter: blur(10px);
+}
+
+.course-header h4 {
+  margin: 0 0 10px 0;
+  font-size: 1.5em;
+  color: #ffd700;
+}
+
+.course-description {
+  font-style: italic;
+  margin-bottom: 20px;
+  color: #f0f0f0;
+}
+
+.course-objectives h5,
+.course-prerequisites h5,
+.course-modules h5,
+.course-assessment h5,
+.course-resources h5 {
+  color: #ffd700;
+  margin: 20px 0 10px 0;
+  font-size: 1.2em;
+}
+
+.course-objectives ul,
+.course-prerequisites ul,
+.course-assessment ul,
+.course-resources ul {
+  margin: 10px 0;
+  padding-left: 20px;
+}
+
+.course-objectives li,
+.course-prerequisites li,
+.course-assessment li,
+.course-resources li {
+  margin: 5px 0;
+  color: #f0f0f0;
+}
+
+.module-card {
+  background: rgba(255, 255, 255, 0.15);
+  padding: 15px;
+  margin: 15px 0;
+  border-radius: 8px;
+  border-left: 4px solid #ffd700;
+}
+
+.module-card h6 {
+  margin: 0 0 10px 0;
+  color: #ffd700;
+  font-size: 1.1em;
+}
+
+.module-card p {
+  margin: 5px 0;
+  color: #f0f0f0;
+}
+
+.module-objectives,
+.module-concepts,
+.module-exercises {
+  margin: 10px 0;
+}
+
+.module-objectives ul,
+.module-concepts ul,
+.module-exercises ul {
+  margin: 5px 0;
+  padding-left: 20px;
+}
+
+.module-objectives li,
+.module-concepts li,
+.module-exercises li {
+  margin: 3px 0;
+  color: #f0f0f0;
+  font-size: 0.9em;
+}

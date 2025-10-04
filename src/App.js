@@ -6,6 +6,7 @@ function App() {
   const [topic, setTopic] = useState('');
   const [apiKey, setApiKey] = useState('');
   const [evaluateAuthenticity, setEvaluateAuthenticity] = useState(false);
+  const [generateCourse, setGenerateCourse] = useState(false);
   const [provider, setProvider] = useState('gemini');
   const [course, setCourse] = useState(null);
 
@@ -24,6 +25,7 @@ function App() {
         requestData.evaluateAuthenticity = true;
         requestData.apiKey = apiKey.trim();
         requestData.provider = provider;
+        requestData.generateCourse = generateCourse;
       }
 
       const response = await axios.post(`${API_BASE_URL}/scrape`, requestData);
@@ -41,7 +43,8 @@ function App() {
           searchResults: data.searchResults || [],
           count: data.count || 0,
           fallback: data.fallback || false,
-          mostAuthenticSource: data.mostAuthenticSource
+          mostAuthenticSource: data.mostAuthenticSource,
+          courseStructure: data.courseStructure
         });
       } else if (data.links) {
         // Old format with links array
@@ -110,6 +113,15 @@ function App() {
 
             {evaluateAuthenticity && (
               <>
+                <label>
+                  <input
+                    type="checkbox"
+                    checked={generateCourse}
+                    onChange={(e) => setGenerateCourse(e.target.checked)}
+                  />
+                  Generate complete course structure (scrapes content and creates structured course)
+                </label>
+
                 <select
                   value={provider}
                   onChange={(e) => setProvider(e.target.value)}
@@ -184,6 +196,91 @@ function App() {
                       <p className="authentic-source-reasoning">
                         {course.mostAuthenticSource.reasoning}
                       </p>
+                    </div>
+                  </div>
+                )}
+
+                {course.courseStructure && (
+                  <div className="course-structure">
+                    <h3>📚 Complete Course Structure</h3>
+                    <div className="course-structure-content">
+                      <div className="course-header">
+                        <h4>{course.courseStructure.courseTitle}</h4>
+                        <p className="course-description">{course.courseStructure.description}</p>
+                      </div>
+
+                      <div className="course-objectives">
+                        <h5>🎯 Learning Objectives</h5>
+                        <ul>
+                          {course.courseStructure.learningObjectives.map((objective, index) => (
+                            <li key={index}>{objective}</li>
+                          ))}
+                        </ul>
+                      </div>
+
+                      <div className="course-prerequisites">
+                        <h5>📋 Prerequisites</h5>
+                        <ul>
+                          {course.courseStructure.prerequisites.map((prereq, index) => (
+                            <li key={index}>{prereq}</li>
+                          ))}
+                        </ul>
+                      </div>
+
+                      <div className="course-modules">
+                        <h5>📖 Course Modules</h5>
+                        {course.courseStructure.modules.map((module, index) => (
+                          <div key={index} className="module-card">
+                            <h6>{module.title}</h6>
+                            <p><strong>Estimated Time:</strong> {module.estimatedTime}</p>
+
+                            <div className="module-objectives">
+                              <strong>Objectives:</strong>
+                              <ul>
+                                {module.objectives.map((obj, i) => (
+                                  <li key={i}>{obj}</li>
+                                ))}
+                              </ul>
+                            </div>
+
+                            <div className="module-concepts">
+                              <strong>Key Concepts:</strong>
+                              <ul>
+                                {module.concepts.map((concept, i) => (
+                                  <li key={i}>{concept}</li>
+                                ))}
+                              </ul>
+                            </div>
+
+                            <div className="module-exercises">
+                              <strong>Exercises:</strong>
+                              <ul>
+                                {module.exercises.map((exercise, i) => (
+                                  <li key={i}>{exercise}</li>
+                                ))}
+                              </ul>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+
+                      <div className="course-assessment">
+                        <h5>📝 Assessment Methods</h5>
+                        <ul>
+                          {course.courseStructure.assessmentMethods.map((method, index) => (
+                            <li key={index}>{method}</li>
+                          ))}
+                        </ul>
+                      </div>
+
+                      <div className="course-resources">
+                        <h5>🔗 Additional Resources</h5>
+                        <ul>
+                          {course.courseStructure.additionalResources.map((resource, index) => (
+                            <li key={index}>{resource}</li>
+                          ))}
+                        </ul>
+                      </div>
                     </div>
                   </div>
                 )}

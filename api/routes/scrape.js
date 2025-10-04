@@ -68,12 +68,21 @@ Use this information as a starting point for your learning journey.
 
     // Optionally evaluate authenticity using AI API (Gemini or Groq)
     let mostAuthenticSource = null;
+    let courseStructure = null;
+
     if (req.body.evaluateAuthenticity && req.body.apiKey && req.body.apiKey.trim()) {
       try {
         console.log('Evaluating authenticity of search results with provider:', req.body.provider || 'gemini');
         const provider = req.body.provider || 'gemini';
         mostAuthenticSource = await evaluateAuthenticity(searchResults, topic, req.body.apiKey.trim(), provider);
         console.log('Most authentic source evaluation completed');
+
+        // If authenticity evaluation succeeded and user wants course generation
+        if (mostAuthenticSource && req.body.generateCourse) {
+          console.log('Generating course structure from most authentic source...');
+          courseStructure = await generateCourseFromSource(mostAuthenticSource, topic, req.body.apiKey.trim(), provider);
+          console.log('Course structure generation completed');
+        }
       } catch (authError) {
         console.error('Authenticity evaluation failed:', authError.message);
         console.error('Full auth error:', authError);
@@ -89,7 +98,8 @@ Use this information as a starting point for your learning journey.
       searchResults: searchResults,
       count: searchResults.length,
       searchInformation: response.data.searchInformation || {},
-      mostAuthenticSource: mostAuthenticSource
+      mostAuthenticSource: mostAuthenticSource,
+      courseStructure: courseStructure
     });
 
   } catch (err) {
@@ -254,6 +264,184 @@ async function evaluateWithGroq(prompt, apiKey) {
   return data.choices[0].message.content;
 }
 
+// Helper function to generate course structure from the most authentic source
+async function generateCourseFromSource(mostAuthenticSource, topic, apiKey, provider) {
+  try {
+    console.log('Scraping content from most authentic source:', mostAuthenticSource.url);
+
+    // Scrape the content from the most authentic source
+    const scrapedContent = await scrapeWebpageContent(mostAuthenticSource.url);
+
+    if (!scrapedContent || scrapedContent.length < 100) {
+      console.log('Insufficient content scraped, using fallback');
+      return createFallbackCourseStructure(topic);
+    }
+
+    console.log('Generating course structure from scraped content...');
+
+    // Use AI to generate course structure from the scraped content
+    const coursePrompt = `
+You are an expert educational content creator. I have scraped content from a highly authentic source about "${topic}". 
+
+Here is the scraped content:
+${scrapedContent.substring(0, 8000)} // Limit content length
+
+Please create a comprehensive, structured course based on this content. The course should include:
+
+1. **Course Title**: A clear, engaging title
+2. **Course Description**: Brief overview (2-3 sentences)
+3. **Learning Objectives**: 3-5 main objectives
+4. **Prerequisites**: Any required background knowledge
+5. **Course Modules**: 4-6 modules, each containing:
+   - Module title
+   - Learning objectives for the module
+   - Key concepts to cover
+   - Practical exercises or activities
+   - Estimated time to complete
+
+6. **Assessment Methods**: How learners can test their knowledge
+7. **Resources**: Additional recommended resources
+
+Return the response in this exact JSON format:
+{
+  "courseTitle": "Course Title Here",
+  "description": "Course description here",
+  "learningObjectives": ["Objective 1", "Objective 2", "Objective 3"],
+  "prerequisites": ["Prerequisite 1", "Prerequisite 2"],
+  "modules": [
+    {
+      "title": "Module Title",
+      "objectives": ["Objective 1", "Objective 2"],
+      "concepts": ["Concept 1", "Concept 2", "Concept 3"],
+      "exercises": ["Exercise 1", "Exercise 2"],
+      "estimatedTime": "X hours"
+    }
+  ],
+  "assessmentMethods": ["Method 1", "Method 2"],
+  "additionalResources": ["Resource 1", "Resource 2"]
+}
+`;
+
+    let courseResponse;
+
+    if (provider === 'groq') {
+      courseResponse = await evaluateWithGroq(coursePrompt, apiKey);
+    } else {
+      courseResponse = await evaluateWithGemini(coursePrompt, apiKey);
+    }
+
+    // Try to parse the course structure response
+    try {
+      const courseStructure = JSON.parse(courseResponse);
+      console.log('Course structure generated successfully');
+      return courseStructure;
+    } catch (parseError) {
+      console.log('Failed to parse course structure JSON, using fallback');
+      return createFallbackCourseStructure(topic);
+    }
+
+  } catch (error) {
+    console.error('Error generating course from source:', error);
+    return createFallbackCourseStructure(topic);
+  }
+}
+
+// Helper function to scrape webpage content
+async function scrapeWebpageContent(url) {
+  try {
+    console.log('Scraping content from:', url);
+
+    // For Vercel deployment, we'll use a simple approach
+    // In production, you might want to use a more robust scraping service
+    const response = await fetch(url, {
+      headers: {
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
+      }
+    });
+
+    if (!response.ok) {
+      throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+    }
+
+    const html = await response.text();
+
+    // Simple HTML text extraction (very basic - in production use a proper HTML parser)
+    // Remove script and style tags
+    let textContent = html.replace(/<script[^>]*>[\s\S]*?<\/script>/gi, '');
+    textContent = textContent.replace(/<style[^>]*>[\s\S]*?<\/style>/gi, '');
+    textContent = textContent.replace(/<[^>]+>/g, ' '); // Remove HTML tags
+    textContent = textContent.replace(/\s+/g, ' ').trim(); // Clean up whitespace
+
+    // Extract meaningful content (rough approximation)
+    const sentences = textContent.split(/[.!?]+/).filter(s => s.trim().length > 20);
+    const meaningfulContent = sentences.slice(0, 50).join('. ') + '.'; // Limit to first 50 sentences
+
+    console.log('Successfully scraped content, length:', meaningfulContent.length);
+    return meaningfulContent;
+
+  } catch (error) {
+    console.error('Error scraping webpage:', error);
+    return null;
+  }
+}
+
+// Helper function to create fallback course structure
+function createFallbackCourseStructure(topic) {
+  return {
+    courseTitle: `Introduction to ${topic}`,
+    description: `A comprehensive course on ${topic} covering fundamental concepts and practical applications.`,
+    learningObjectives: [
+      `Understand the basic concepts of ${topic}`,
+      `Apply ${topic} principles in practical scenarios`,
+      `Develop problem-solving skills related to ${topic}`
+    ],
+    prerequisites: [
+      'Basic computer literacy',
+      'High school level mathematics (recommended)'
+    ],
+    modules: [
+      {
+        title: `Introduction to ${topic}`,
+        objectives: [`Understand what ${topic} is`, 'Learn basic terminology'],
+        concepts: ['Core concepts', 'Key terminology', 'Basic principles'],
+        exercises: ['Reading assignments', 'Basic quizzes'],
+        estimatedTime: '2-3 hours'
+      },
+      {
+        title: `Core Concepts of ${topic}`,
+        objectives: ['Master fundamental concepts', 'Understand relationships between concepts'],
+        concepts: ['Advanced concepts', 'Theoretical foundations', 'Practical applications'],
+        exercises: ['Practice exercises', 'Case studies'],
+        estimatedTime: '4-5 hours'
+      },
+      {
+        title: `Practical Applications`,
+        objectives: ['Apply knowledge in real scenarios', 'Solve practical problems'],
+        concepts: ['Real-world applications', 'Best practices', 'Common patterns'],
+        exercises: ['Hands-on projects', 'Problem-solving exercises'],
+        estimatedTime: '6-8 hours'
+      },
+      {
+        title: `Advanced Topics`,
+        objectives: ['Explore advanced concepts', 'Understand complex scenarios'],
+        concepts: ['Advanced techniques', 'Specialized topics', 'Future trends'],
+        exercises: ['Advanced projects', 'Research assignments'],
+        estimatedTime: '4-6 hours'
+      }
+    ],
+    assessmentMethods: [
+      'Quizzes and tests',
+      'Practical assignments',
+      'Final project'
+    ],
+    additionalResources: [
+      'Official documentation',
+      'Online tutorials',
+      'Community forums'
+    ]
+  };
+}
+
 // Fallback function to extract authenticity info from text response
 function extractAuthenticityFromText(textResponse, searchResults) {
   try {
@@ -267,7 +455,7 @@ function extractAuthenticityFromText(textResponse, searchResults) {
           title: searchResults[index].title,
           url: searchResults[index].url,
           domain: searchResults[index].displayLink,
-          reasoning: 'Extracted from Gemini text response'
+          reasoning: 'Extracted from AI text response'
         };
       }
     }
