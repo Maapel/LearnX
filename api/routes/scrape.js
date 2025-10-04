@@ -370,23 +370,36 @@ async function generateDetailedModules(content, syllabus, topic, apiKey, provide
     console.log(`Generating detailed content for module: ${moduleTopic.title}`);
 
     const modulePrompt = `
-Based on this content about "${topic}" and the module topic "${moduleTopic.title}" (${moduleTopic.description}), create detailed module content.
+You are creating a professional online course module. Based on the content about "${topic}" and the module topic "${moduleTopic.title}" (${moduleTopic.description}), create a comprehensive, educational module that would be suitable for a mature online learning platform.
 
 Content:
-${content.substring(0, 4000)}
+${content.substring(0, 5000)}
 
-For module "${moduleTopic.title}", provide:
-1. Specific learning objectives for this module
-2. Key concepts to cover
-3. Topics to teach
-4. Estimated time to complete
+Create a detailed module with the following structure:
+
+1. **Module Overview**: A comprehensive introduction (3-4 paragraphs) explaining what students will learn and why it's important
+2. **Learning Objectives**: 4-6 specific, measurable objectives
+3. **Key Concepts**: 6-8 core concepts with brief explanations
+4. **Detailed Topics**: 8-12 specific topics to cover, each with a short description
+5. **Prerequisites**: What students should know before starting this module
+6. **Estimated Time**: Realistic time estimate including reading, exercises, and practice
+7. **Module Content**: A structured outline of what will be taught (like a course syllabus for this module)
 
 Return in JSON format:
 {
-  "objectives": ["Objective 1", "Objective 2"],
-  "concepts": ["Concept 1", "Concept 2"],
-  "topics": ["Topic 1", "Topic 2"],
-  "estimatedTime": "X hours"
+  "overview": "Detailed 3-4 paragraph introduction...",
+  "objectives": ["Specific objective 1", "Specific objective 2", ...],
+  "keyConcepts": [
+    {"concept": "Concept Name", "explanation": "Brief explanation of the concept"},
+    ...
+  ],
+  "detailedTopics": [
+    {"topic": "Topic Name", "description": "Detailed description of what will be covered"},
+    ...
+  ],
+  "prerequisites": ["Prerequisite 1", "Prerequisite 2"],
+  "estimatedTime": "X hours",
+  "moduleContent": "Structured outline of module content..."
 }
 `;
 
@@ -406,10 +419,26 @@ Return in JSON format:
       detailedModules.push({
         title: moduleTopic.title,
         description: moduleTopic.description,
-        objectives: [`Understand ${moduleTopic.title.toLowerCase()}`],
-        concepts: [`Key concepts in ${moduleTopic.title.toLowerCase()}`],
-        topics: [`Topics related to ${moduleTopic.title.toLowerCase()}`],
-        estimatedTime: "2-3 hours"
+        overview: `This module provides a comprehensive introduction to ${moduleTopic.title.toLowerCase()}. You will learn the fundamental concepts, practical applications, and best practices related to this important topic in ${topic}. Through structured lessons, hands-on exercises, and real-world examples, you'll develop a solid understanding that will serve as a foundation for more advanced topics.`,
+        objectives: [
+          `Understand the core principles of ${moduleTopic.title.toLowerCase()}`,
+          `Apply ${moduleTopic.title.toLowerCase()} concepts in practical scenarios`,
+          `Identify common patterns and use cases for ${moduleTopic.title.toLowerCase()}`,
+          `Develop problem-solving skills related to ${moduleTopic.title.toLowerCase()}`
+        ],
+        keyConcepts: [
+          { concept: `Basic ${moduleTopic.title}`, explanation: `Fundamental concepts and terminology` },
+          { concept: `Core Principles`, explanation: `Essential principles and theories` },
+          { concept: `Practical Applications`, explanation: `Real-world usage and implementation` }
+        ],
+        detailedTopics: [
+          { topic: `Introduction to ${moduleTopic.title}`, description: `Overview and basic concepts` },
+          { topic: `Core Components`, description: `Key elements and their functions` },
+          { topic: `Practical Examples`, description: `Real-world applications and case studies` }
+        ],
+        prerequisites: [`Basic understanding of ${topic}`, 'Fundamental computer literacy'],
+        estimatedTime: "3-4 hours",
+        moduleContent: `1. Introduction and Overview\n2. Core Concepts and Principles\n3. Practical Applications\n4. Hands-on Exercises\n5. Assessment and Review`
       });
     }
 

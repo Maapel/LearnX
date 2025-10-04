@@ -241,11 +241,33 @@ function App() {
                         <h5>📖 Course Modules</h5>
                         {course.courseStructure.modules.map((module, index) => (
                           <div key={index} className="module-card">
-                            <h6>{module.title}</h6>
-                            <p><strong>Estimated Time:</strong> {module.estimatedTime}</p>
+                            <div className="module-header-section">
+                              <h6 className="module-title">{module.title}</h6>
+                              <div className="module-meta">
+                                <span className="module-time">⏱️ {module.estimatedTime}</span>
+                              </div>
+                            </div>
+
+                            {module.overview && (
+                              <div className="module-overview">
+                                <h7>Module Overview</h7>
+                                <p className="overview-text">{module.overview}</p>
+                              </div>
+                            )}
+
+                            {module.prerequisites && module.prerequisites.length > 0 && (
+                              <div className="module-prerequisites">
+                                <h7>Prerequisites</h7>
+                                <ul>
+                                  {module.prerequisites.map((prereq, i) => (
+                                    <li key={i}>{prereq}</li>
+                                  ))}
+                                </ul>
+                              </div>
+                            )}
 
                             <div className="module-objectives">
-                              <strong>Objectives:</strong>
+                              <h7>Learning Objectives</h7>
                               <ul>
                                 {module.objectives.map((obj, i) => (
                                   <li key={i}>{obj}</li>
@@ -253,17 +275,47 @@ function App() {
                               </ul>
                             </div>
 
-                            <div className="module-concepts">
-                              <strong>Key Concepts:</strong>
-                              <ul>
-                                {module.concepts.map((concept, i) => (
-                                  <li key={i}>{concept}</li>
-                                ))}
-                              </ul>
-                            </div>
+                            {module.keyConcepts && module.keyConcepts.length > 0 && (
+                              <div className="module-key-concepts">
+                                <h7>Key Concepts</h7>
+                                <div className="concepts-grid">
+                                  {module.keyConcepts.map((concept, i) => (
+                                    <div key={i} className="concept-item">
+                                      <strong className="concept-name">{concept.concept}</strong>
+                                      <p className="concept-explanation">{concept.explanation}</p>
+                                    </div>
+                                  ))}
+                                </div>
+                              </div>
+                            )}
+
+                            {module.detailedTopics && module.detailedTopics.length > 0 && (
+                              <div className="module-detailed-topics">
+                                <h7>Detailed Topics</h7>
+                                <div className="topics-list">
+                                  {module.detailedTopics.map((topic, i) => (
+                                    <div key={i} className="topic-item">
+                                      <strong className="topic-title">{topic.topic}</strong>
+                                      <p className="topic-description">{topic.description}</p>
+                                    </div>
+                                  ))}
+                                </div>
+                              </div>
+                            )}
+
+                            {module.moduleContent && (
+                              <div className="module-content-outline">
+                                <h7>Module Content Outline</h7>
+                                <div className="content-outline">
+                                  {module.moduleContent.split('\n').map((line, i) => (
+                                    <p key={i} className="outline-line">{line}</p>
+                                  ))}
+                                </div>
+                              </div>
+                            )}
 
                             <div className="module-exercises">
-                              <strong>Exercises:</strong>
+                              <h7>Practical Exercises</h7>
                               <div className="exercises-list">
                                 {module.exercises.map((exercise, i) => (
                                   <div key={i} className="exercise-item">
