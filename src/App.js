@@ -321,16 +321,16 @@ function App() {
                                   <div key={i} className="exercise-item">
                                     <div className="exercise-header">
                                       <strong>{exercise.title}</strong>
-                                      <span className={`difficulty ${exercise.difficulty.toLowerCase()}`}>
-                                        {exercise.difficulty}
+                                      <span className={`difficulty ${(exercise.difficulty || 'intermediate').toLowerCase()}`}>
+                                        {exercise.difficulty || 'Intermediate'}
                                       </span>
-                                      <span className="exercise-time">{exercise.estimatedTime}</span>
+                                      <span className="exercise-time">{exercise.estimatedTime || '30 minutes'}</span>
                                     </div>
-                                    <p className="exercise-description">{exercise.description}</p>
+                                    <p className="exercise-description">{exercise.description || 'Complete this practical exercise to apply your learning.'}</p>
                                     <div className="exercise-outcomes">
                                       <strong>Learning Outcomes:</strong>
                                       <ul>
-                                        {exercise.outcomes.map((outcome, j) => (
+                                        {(exercise.outcomes || ['Apply concepts learned in this module']).map((outcome, j) => (
                                           <li key={j}>{outcome}</li>
                                         ))}
                                       </ul>
