@@ -4,6 +4,8 @@ import axios from 'axios';
 
 function App() {
   const [topic, setTopic] = useState('');
+  const [apiKey, setApiKey] = useState('');
+  const [evaluateAuthenticity, setEvaluateAuthenticity] = useState(false);
   const [course, setCourse] = useState(null);
 
   const handleSubmit = async (e) => {
@@ -12,9 +14,17 @@ function App() {
       const API_BASE_URL = '/api';
 
       // Call the scraping endpoint
-      const response = await axios.post(`${API_BASE_URL}/scrape`, {
+      const requestData = {
         topic: topic
-      });
+      };
+
+      // Add authenticity evaluation if enabled and API key provided
+      if (evaluateAuthenticity && apiKey.trim()) {
+        requestData.evaluateAuthenticity = true;
+        requestData.apiKey = apiKey.trim();
+      }
+
+      const response = await axios.post(`${API_BASE_URL}/scrape`, requestData);
 
       console.log('Scraping response:', response.data);
 
@@ -28,7 +38,8 @@ function App() {
           content: data.content,
           searchResults: data.searchResults || [],
           count: data.count || 0,
-          fallback: data.fallback || false
+          fallback: data.fallback || false,
+          mostAuthenticSource: data.mostAuthenticSource
         });
       } else if (data.links) {
         // Old format with links array
@@ -84,6 +95,27 @@ function App() {
             onChange={(e) => setTopic(e.target.value)}
             placeholder="Enter a topic"
           />
+
+          <div className="authenticity-controls">
+            <label>
+              <input
+                type="checkbox"
+                checked={evaluateAuthenticity}
+                onChange={(e) => setEvaluateAuthenticity(e.target.checked)}
+              />
+              Evaluate source authenticity (requires Gemini API key)
+            </label>
+
+            {evaluateAuthenticity && (
+              <input
+                type="password"
+                value={apiKey}
+                onChange={(e) => setApiKey(e.target.value)}
+                placeholder="Enter your Gemini API key"
+              />
+            )}
+          </div>
+
           <button type="submit">Generate Course</button>
         </form>
         {course && (
@@ -117,6 +149,30 @@ function App() {
                         </li>
                       ))}
                     </ul>
+                  </div>
+                )}
+
+                {course.mostAuthenticSource && (
+                  <div className="most-authentic-source">
+                    <h3>🎯 Most Authentic Source</h3>
+                    <div className="authentic-source-card">
+                      <div className="authentic-source-header">
+                        <a
+                          href={course.mostAuthenticSource.url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="authentic-source-title"
+                        >
+                          {course.mostAuthenticSource.title}
+                        </a>
+                        <span className="authentic-source-domain">
+                          {course.mostAuthenticSource.domain}
+                        </span>
+                      </div>
+                      <p className="authentic-source-reasoning">
+                        {course.mostAuthenticSource.reasoning}
+                      </p>
+                    </div>
                   </div>
                 )}
 

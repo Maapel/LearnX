@@ -66,13 +66,27 @@ This course content was extracted from ${searchResults.length} web sources to he
 Use this information as a starting point for your learning journey.
 `;
 
+    // Optionally evaluate authenticity using Gemini API
+    let mostAuthenticSource = null;
+    if (req.body.evaluateAuthenticity && req.body.apiKey) {
+      try {
+        console.log('Evaluating authenticity of search results...');
+        mostAuthenticSource = await evaluateAuthenticityWithGemini(searchResults, topic, req.body.apiKey);
+        console.log('Most authentic source:', mostAuthenticSource);
+      } catch (authError) {
+        console.error('Authenticity evaluation failed:', authError.message);
+        // Continue without authenticity evaluation
+      }
+    }
+
     // Return the extracted content
     res.json({
       topic,
       content: courseContent,
       searchResults: searchResults,
       count: searchResults.length,
-      searchInformation: response.data.searchInformation || {}
+      searchInformation: response.data.searchInformation || {},
+      mostAuthenticSource: mostAuthenticSource
     });
 
   } catch (err) {
@@ -117,5 +131,102 @@ Practice regularly and build projects to reinforce your learning.
     });
   }
 });
+
+// Helper function to evaluate authenticity of search results using Gemini API
+async function evaluateAuthenticityWithGemini(searchResults, topic, apiKey) {
+  try {
+    const { GoogleGenerativeAI } = require('@google/generative-ai');
+    const genAI = new GoogleGenerativeAI(apiKey);
+    const model = genAI.getGenerativeModel({ model: 'gemini-pro' });
+
+    // Prepare the search results for evaluation
+    const resultsText = searchResults.map((result, index) =>
+      `Source ${index + 1}:
+Title: ${result.title}
+URL: ${result.url}
+Domain: ${result.displayLink}
+Snippet: ${result.snippet}`
+    ).join('\n\n');
+
+    const evaluationPrompt = `
+You are an expert at evaluating the authenticity and reliability of educational content sources.
+
+Given the following search results for the topic "${topic}", analyze each source and determine which one appears to be the MOST AUTHENTIC and RELIABLE for learning this topic.
+
+Search Results:
+${resultsText}
+
+Please evaluate each source based on:
+1. Domain authority (.edu, .org, .gov domains are generally more reliable)
+2. Content relevance to the topic
+3. Professional presentation
+4. Educational focus
+5. Credibility indicators
+
+Return ONLY a JSON object in this exact format:
+{
+  "mostAuthenticSource": {
+    "index": 0,
+    "title": "Source Title",
+    "url": "https://source.url",
+    "domain": "source.com",
+    "reasoning": "Brief explanation of why this source is most authentic"
+  }
+}
+
+Choose the single most authentic source from the provided results.
+`;
+
+    const result = await model.generateContent(evaluationPrompt);
+    const response = await result.response;
+    const aiResponse = response.text();
+
+    // Try to parse the JSON response
+    try {
+      const parsedResponse = JSON.parse(aiResponse);
+      return parsedResponse.mostAuthenticSource;
+    } catch (parseError) {
+      console.log('Failed to parse Gemini authenticity response as JSON:', aiResponse);
+      // Try to extract information from text response
+      return extractAuthenticityFromText(aiResponse, searchResults);
+    }
+
+  } catch (error) {
+    console.error('Gemini authenticity evaluation error:', error);
+    throw new Error('Failed to evaluate authenticity with Gemini');
+  }
+}
+
+// Fallback function to extract authenticity info from text response
+function extractAuthenticityFromText(textResponse, searchResults) {
+  try {
+    // Look for source index in the text
+    const indexMatch = textResponse.match(/source\s+(\d+)/i);
+    if (indexMatch) {
+      const index = parseInt(indexMatch[1]) - 1; // Convert to 0-based index
+      if (index >= 0 && index < searchResults.length) {
+        return {
+          index: index,
+          title: searchResults[index].title,
+          url: searchResults[index].url,
+          domain: searchResults[index].displayLink,
+          reasoning: 'Extracted from Gemini text response'
+        };
+      }
+    }
+
+    // Default to first result if parsing fails
+    return {
+      index: 0,
+      title: searchResults[0].title,
+      url: searchResults[0].url,
+      domain: searchResults[0].displayLink,
+      reasoning: 'Default selection due to parsing failure'
+    };
+  } catch (error) {
+    console.error('Error extracting authenticity from text:', error);
+    return null;
+  }
+}
 
 module.exports = router;
