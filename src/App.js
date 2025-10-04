@@ -314,31 +314,151 @@ function App() {
                               </div>
                             )}
 
-                            <div className="module-exercises">
-                              <h7>Practical Exercises</h7>
-                              <div className="exercises-list">
-                                {module.exercises.map((exercise, i) => (
-                                  <div key={i} className="exercise-item">
-                                    <div className="exercise-header">
-                                      <strong>{exercise.title}</strong>
-                                      <span className={`difficulty ${(exercise.difficulty || 'intermediate').toLowerCase()}`}>
-                                        {exercise.difficulty || 'Intermediate'}
-                                      </span>
-                                      <span className="exercise-time">{exercise.estimatedTime || '30 minutes'}</span>
+                            {/* Learning Sections - Main Content */}
+                            {module.learningSections && module.learningSections.length > 0 && (
+                              <div className="learning-sections">
+                                <h7>📖 Learning Content</h7>
+                                {module.learningSections.map((section, i) => (
+                                  <div key={i} className="learning-section">
+                                    <h8>{section.title}</h8>
+                                    <div className="section-content">
+                                      {section.content.split('\n').map((paragraph, j) => (
+                                        <p key={j}>{paragraph}</p>
+                                      ))}
                                     </div>
-                                    <p className="exercise-description">{exercise.description || 'Complete this practical exercise to apply your learning.'}</p>
-                                    <div className="exercise-outcomes">
-                                      <strong>Learning Outcomes:</strong>
-                                      <ul>
-                                        {(exercise.outcomes || ['Apply concepts learned in this module']).map((outcome, j) => (
-                                          <li key={j}>{outcome}</li>
+
+                                    {section.keyConcepts && section.keyConcepts.length > 0 && (
+                                      <div className="section-concepts">
+                                        <strong>🔑 Key Concepts:</strong>
+                                        <ul>
+                                          {section.keyConcepts.map((concept, k) => (
+                                            <li key={k}>{concept}</li>
+                                          ))}
+                                        </ul>
+                                      </div>
+                                    )}
+
+                                    {section.codeExamples && section.codeExamples.length > 0 && (
+                                      <div className="code-examples">
+                                        <strong>💻 Code Examples:</strong>
+                                        {section.codeExamples.map((code, k) => (
+                                          <pre key={k} className="code-block">
+                                            <code>{code}</code>
+                                          </pre>
                                         ))}
-                                      </ul>
-                                    </div>
+                                      </div>
+                                    )}
+
+                                    {section.tips && section.tips.length > 0 && (
+                                      <div className="section-tips">
+                                        <strong>💡 Tips:</strong>
+                                        <ul>
+                                          {section.tips.map((tip, k) => (
+                                            <li key={k}>{tip}</li>
+                                          ))}
+                                        </ul>
+                                      </div>
+                                    )}
                                   </div>
                                 ))}
                               </div>
-                            </div>
+                            )}
+
+                            {/* Practice Exercises */}
+                            {module.exercises && module.exercises.length > 0 && (
+                              <div className="module-exercises">
+                                <h7>🛠️ Practice Exercises</h7>
+                                <div className="exercises-list">
+                                  {module.exercises.map((exercise, i) => (
+                                    <div key={i} className="exercise-item">
+                                      <div className="exercise-header">
+                                        <strong>{exercise.title}</strong>
+                                        <span className={`difficulty ${(exercise.difficulty || 'intermediate').toLowerCase()}`}>
+                                          {exercise.difficulty || 'Intermediate'}
+                                        </span>
+                                        <span className="exercise-time">{exercise.estimatedTime || '30 minutes'}</span>
+                                      </div>
+
+                                      <div className="exercise-description">
+                                        <p>{exercise.description || 'Complete this practical exercise to apply your learning.'}</p>
+
+                                        {exercise.steps && exercise.steps.length > 0 && (
+                                          <div className="exercise-steps">
+                                            <strong>Steps:</strong>
+                                            <ol>
+                                              {exercise.steps.map((step, j) => (
+                                                <li key={j}>{step}</li>
+                                              ))}
+                                            </ol>
+                                          </div>
+                                        )}
+
+                                        {exercise.expectedOutcome && (
+                                          <div className="expected-outcome">
+                                            <strong>Expected Outcome:</strong>
+                                            <p>{exercise.expectedOutcome}</p>
+                                          </div>
+                                        )}
+                                      </div>
+                                    </div>
+                                  ))}
+                                </div>
+                              </div>
+                            )}
+
+                            {/* Module Quiz */}
+                            {module.quiz && module.quiz.length > 0 && (
+                              <div className="module-quiz">
+                                <h7>📝 Knowledge Check</h7>
+                                <div className="quiz-questions">
+                                  {module.quiz.map((question, i) => (
+                                    <div key={i} className="quiz-question">
+                                      <h9>Question {i + 1}: {question.question}</h9>
+
+                                      {question.options && question.options.length > 0 ? (
+                                        <div className="quiz-options">
+                                          {question.options.map((option, j) => (
+                                            <div key={j} className={`quiz-option ${option.startsWith(question.correctAnswer) ? 'correct' : ''}`}>
+                                              {option}
+                                            </div>
+                                          ))}
+                                        </div>
+                                      ) : (
+                                        <div className="quiz-open-answer">
+                                          <em>Open-ended question</em>
+                                        </div>
+                                      )}
+
+                                      {question.explanation && (
+                                        <div className="quiz-explanation">
+                                          <strong>Explanation:</strong>
+                                          <p>{question.explanation}</p>
+                                        </div>
+                                      )}
+                                    </div>
+                                  ))}
+                                </div>
+                              </div>
+                            )}
+
+                            {/* Module Summary */}
+                            {module.summary && (
+                              <div className="module-summary">
+                                <h7>📋 Module Summary</h7>
+                                <p className="summary-text">{module.summary}</p>
+
+                                {module.keyTakeaways && module.keyTakeaways.length > 0 && (
+                                  <div className="key-takeaways">
+                                    <strong>🎯 Key Takeaways:</strong>
+                                    <ul>
+                                      {module.keyTakeaways.map((takeaway, i) => (
+                                        <li key={i}>{takeaway}</li>
+                                      ))}
+                                    </ul>
+                                  </div>
+                                )}
+                              </div>
+                            )}
                           </div>
                         ))}
                       </div>

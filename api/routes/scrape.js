@@ -373,39 +373,80 @@ async function generateDetailedModules(content, syllabus, topic, apiKey, provide
   const detailedModules = [];
 
   for (const moduleTopic of syllabus.moduleTopics) {
-    console.log(`Generating detailed content for module: ${moduleTopic.title}`);
+    console.log(`Generating comprehensive learning content for module: ${moduleTopic.title}`);
 
     const modulePrompt = `
-You are creating a professional online course module. Based on the content about "${topic}" and the module topic "${moduleTopic.title}" (${moduleTopic.description}), create a comprehensive, educational module that would be suitable for a mature online learning platform.
+You are creating a complete, self-contained learning module for an online course about "${topic}". This module should contain ALL the written content, explanations, and materials needed for students to learn the topic without external resources.
 
-Content:
-${content.substring(0, 5000)}
+Module Topic: "${moduleTopic.title}"
+Description: ${moduleTopic.description}
 
-Create a detailed module with the following structure:
+Based on this reference content:
+${content.substring(0, 4000)}
 
-1. **Module Overview**: A comprehensive introduction (3-4 paragraphs) explaining what students will learn and why it's important
-2. **Learning Objectives**: 4-6 specific, measurable objectives
-3. **Key Concepts**: 6-8 core concepts with brief explanations
-4. **Detailed Topics**: 8-12 specific topics to cover, each with a short description
-5. **Prerequisites**: What students should know before starting this module
-6. **Estimated Time**: Realistic time estimate including reading, exercises, and practice
-7. **Module Content**: A structured outline of what will be taught (like a course syllabus for this module)
+Create a comprehensive learning module with the following structure:
 
-Return in JSON format:
+1. **Module Overview**: Detailed introduction (4-5 paragraphs) explaining concepts, importance, and what students will achieve
+
+2. **Learning Objectives**: 5-7 specific, measurable learning objectives
+
+3. **Prerequisites**: Required background knowledge
+
+4. **Estimated Time**: Realistic completion time
+
+5. **Learning Sections**: Create 4-6 detailed learning sections. Each section should include:
+   - Section title
+   - Comprehensive written explanation (300-500 words each)
+   - Key concepts covered
+   - Code examples (if applicable to ${topic})
+   - Important notes or tips
+
+6. **Practice Exercises**: 3-5 hands-on exercises for each section, including:
+   - Exercise description
+   - Step-by-step instructions
+   - Expected outcomes
+   - Difficulty level
+   - Time estimate
+
+7. **Module Quiz**: 5-8 multiple choice or short answer questions to test understanding
+
+8. **Summary & Key Takeaways**: Comprehensive summary of the module
+
+Return in this exact JSON format:
 {
-  "overview": "Detailed 3-4 paragraph introduction...",
-  "objectives": ["Specific objective 1", "Specific objective 2", ...],
-  "keyConcepts": [
-    {"concept": "Concept Name", "explanation": "Brief explanation of the concept"},
-    ...
-  ],
-  "detailedTopics": [
-    {"topic": "Topic Name", "description": "Detailed description of what will be covered"},
-    ...
-  ],
+  "overview": "Detailed 4-5 paragraph introduction...",
+  "objectives": ["Objective 1", "Objective 2", ...],
   "prerequisites": ["Prerequisite 1", "Prerequisite 2"],
   "estimatedTime": "X hours",
-  "moduleContent": "Structured outline of module content..."
+  "learningSections": [
+    {
+      "title": "Section Title",
+      "content": "Comprehensive written explanation (300-500 words)...",
+      "keyConcepts": ["Concept 1", "Concept 2"],
+      "codeExamples": ["Example code here"],
+      "tips": ["Important tip 1", "Tip 2"]
+    }
+  ],
+  "exercises": [
+    {
+      "title": "Exercise Title",
+      "description": "Detailed exercise description...",
+      "steps": ["Step 1", "Step 2", "Step 3"],
+      "expectedOutcome": "What should happen...",
+      "difficulty": "Beginner/Intermediate/Advanced",
+      "timeEstimate": "X minutes"
+    }
+  ],
+  "quiz": [
+    {
+      "question": "Question text?",
+      "options": ["A) Option 1", "B) Option 2", "C) Option 3", "D) Option 4"],
+      "correctAnswer": "A",
+      "explanation": "Why this is correct..."
+    }
+  ],
+  "summary": "Comprehensive module summary...",
+  "keyTakeaways": ["Takeaway 1", "Takeaway 2", "Takeaway 3"]
 }
 `;
 
@@ -425,31 +466,62 @@ Return in JSON format:
       detailedModules.push({
         title: moduleTopic.title,
         description: moduleTopic.description,
-        overview: `This module provides a comprehensive introduction to ${moduleTopic.title.toLowerCase()}. You will learn the fundamental concepts, practical applications, and best practices related to this important topic in ${topic}. Through structured lessons, hands-on exercises, and real-world examples, you'll develop a solid understanding that will serve as a foundation for more advanced topics.`,
+        overview: `Welcome to ${moduleTopic.title}! This comprehensive module will guide you through all the essential concepts and practical applications of ${moduleTopic.title.toLowerCase()} in ${topic}. You'll learn step-by-step through detailed explanations, real-world examples, and hands-on exercises. By the end of this module, you'll have a solid foundation and practical experience that you can build upon in advanced topics.`,
         objectives: [
-          `Understand the core principles of ${moduleTopic.title.toLowerCase()}`,
-          `Apply ${moduleTopic.title.toLowerCase()} concepts in practical scenarios`,
-          `Identify common patterns and use cases for ${moduleTopic.title.toLowerCase()}`,
-          `Develop problem-solving skills related to ${moduleTopic.title.toLowerCase()}`
-        ],
-        keyConcepts: [
-          { concept: `Basic ${moduleTopic.title}`, explanation: `Fundamental concepts and terminology` },
-          { concept: `Core Principles`, explanation: `Essential principles and theories` },
-          { concept: `Practical Applications`, explanation: `Real-world usage and implementation` }
-        ],
-        detailedTopics: [
-          { topic: `Introduction to ${moduleTopic.title}`, description: `Overview and basic concepts` },
-          { topic: `Core Components`, description: `Key elements and their functions` },
-          { topic: `Practical Examples`, description: `Real-world applications and case studies` }
+          `Master the fundamental concepts of ${moduleTopic.title.toLowerCase()}`,
+          `Apply ${moduleTopic.title.toLowerCase()} principles in practical scenarios`,
+          `Understand the theoretical foundations and real-world applications`,
+          `Develop problem-solving skills related to ${moduleTopic.title.toLowerCase()}`,
+          `Create working examples and solutions`
         ],
         prerequisites: [`Basic understanding of ${topic}`, 'Fundamental computer literacy'],
-        estimatedTime: "3-4 hours",
-        moduleContent: `1. Introduction and Overview\n2. Core Concepts and Principles\n3. Practical Applications\n4. Hands-on Exercises\n5. Assessment and Review`
+        estimatedTime: "4-6 hours",
+        learningSections: [
+          {
+            title: `Introduction to ${moduleTopic.title}`,
+            content: `Let's begin our journey into ${moduleTopic.title.toLowerCase()}. This section provides a comprehensive overview of the core concepts and principles that form the foundation of this topic. We'll explore the fundamental ideas, understand their importance in the broader context of ${topic}, and see how these concepts connect to real-world applications.`,
+            keyConcepts: ['Core principles', 'Fundamental concepts', 'Basic terminology'],
+            codeExamples: ['# Basic example code'],
+            tips: ['Focus on understanding the concepts', 'Practice regularly']
+          },
+          {
+            title: `Core Components and Architecture`,
+            content: `Now we'll dive deep into the architecture and components that make ${moduleTopic.title.toLowerCase()} work. Understanding these building blocks is crucial for mastering the topic and applying it effectively in your projects.`,
+            keyConcepts: ['Architecture patterns', 'Component interactions', 'Design principles'],
+            codeExamples: ['# Architecture example'],
+            tips: ['Draw diagrams to visualize relationships', 'Study real-world implementations']
+          }
+        ],
+        exercises: [
+          {
+            title: `Basic ${moduleTopic.title} Exercise`,
+            description: `Apply the concepts learned in this module to create a simple working example.`,
+            steps: ['Set up your development environment', 'Implement the basic structure', 'Test your implementation', 'Debug and refine'],
+            expectedOutcome: 'A working implementation that demonstrates the core concepts',
+            difficulty: 'Beginner',
+            timeEstimate: '45 minutes'
+          }
+        ],
+        quiz: [
+          {
+            question: `What is the primary purpose of ${moduleTopic.title.toLowerCase()} in ${topic}?`,
+            options: ['A) To complicate development', 'B) To provide structure and organization', 'C) To increase code length', 'D) To make debugging harder'],
+            correctAnswer: 'B',
+            explanation: 'The primary purpose is to provide structure and organization to development processes.'
+          }
+        ],
+        summary: `Congratulations on completing ${moduleTopic.title}! You've learned the essential concepts, practiced with hands-on exercises, and tested your understanding. This knowledge forms a solid foundation for advanced topics in ${topic}.`,
+        keyTakeaways: [
+          `Mastered the core concepts of ${moduleTopic.title.toLowerCase()}`,
+          'Applied theoretical knowledge in practical exercises',
+          'Developed problem-solving skills',
+          'Gained confidence in implementing solutions'
+        ]
       });
     }
 
     // Small delay to avoid rate limiting
-    await new Promise(resolve => setTimeout(resolve, 500));
+    await new Promise(resolve => setTimeout(resolve, 1000)); // Increased delay for comprehensive content
   }
 
   return detailedModules;
