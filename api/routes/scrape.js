@@ -267,9 +267,10 @@ async function evaluateWithGroq(prompt, apiKey) {
 // Helper function to generate course structure from the most authentic source
 async function generateCourseFromSource(mostAuthenticSource, topic, apiKey, provider) {
   try {
-    console.log('Scraping content from most authentic source:', mostAuthenticSource.url);
+    console.log('Starting iterative course generation process...');
 
-    // Scrape the content from the most authentic source
+    // Phase 1: Scrape and analyze content
+    console.log('Phase 1: Scraping content from most authentic source:', mostAuthenticSource.url);
     const scrapedContent = await scrapeWebpageContent(mostAuthenticSource.url);
 
     if (!scrapedContent || scrapedContent.length < 100) {
@@ -277,73 +278,236 @@ async function generateCourseFromSource(mostAuthenticSource, topic, apiKey, prov
       return createFallbackCourseStructure(topic);
     }
 
-    console.log('Generating course structure from scraped content...');
+    // Phase 2: Generate high-level syllabus and module topics
+    console.log('Phase 2: Generating syllabus and module topics...');
+    const syllabusStructure = await generateSyllabus(scrapedContent, topic, apiKey, provider);
 
-    // Use AI to generate course structure from the scraped content
-    const coursePrompt = `
-You are an expert educational content creator. I have scraped content from a highly authentic source about "${topic}". 
+    // Phase 3: Generate detailed modules one by one
+    console.log('Phase 3: Generating detailed module content...');
+    const detailedModules = await generateDetailedModules(scrapedContent, syllabusStructure, topic, apiKey, provider);
 
-Here is the scraped content:
-${scrapedContent.substring(0, 8000)} // Limit content length
+    // Phase 4: Generate exercises and assessments for each module
+    console.log('Phase 4: Generating exercises and assessments...');
+    const modulesWithExercises = await generateModuleExercises(scrapedContent, detailedModules, topic, apiKey, provider);
 
-Please create a comprehensive, structured course based on this content. The course should include:
+    // Phase 5: Compile final course structure
+    console.log('Phase 5: Compiling final course structure...');
+    const finalCourse = {
+      courseTitle: syllabusStructure.courseTitle,
+      description: syllabusStructure.description,
+      learningObjectives: syllabusStructure.learningObjectives,
+      prerequisites: syllabusStructure.prerequisites,
+      modules: modulesWithExercises,
+      assessmentMethods: syllabusStructure.assessmentMethods,
+      additionalResources: syllabusStructure.additionalResources,
+      generationPhases: {
+        phase1: 'Content scraped and analyzed',
+        phase2: 'Syllabus and module topics generated',
+        phase3: 'Detailed module content created',
+        phase4: 'Exercises and assessments added',
+        phase5: 'Course structure compiled'
+      }
+    };
 
-1. **Course Title**: A clear, engaging title
-2. **Course Description**: Brief overview (2-3 sentences)
-3. **Learning Objectives**: 3-5 main objectives
-4. **Prerequisites**: Any required background knowledge
-5. **Course Modules**: 4-6 modules, each containing:
-   - Module title
-   - Learning objectives for the module
-   - Key concepts to cover
-   - Practical exercises or activities
-   - Estimated time to complete
+    console.log('Iterative course generation completed successfully');
+    return finalCourse;
 
-6. **Assessment Methods**: How learners can test their knowledge
-7. **Resources**: Additional recommended resources
+  } catch (error) {
+    console.error('Error in iterative course generation:', error);
+    return createFallbackCourseStructure(topic);
+  }
+}
 
-Return the response in this exact JSON format:
+// Phase 2: Generate syllabus and high-level module topics
+async function generateSyllabus(content, topic, apiKey, provider) {
+  const syllabusPrompt = `
+You are an expert curriculum designer. Based on the following content about "${topic}", create a high-level course syllabus.
+
+Content:
+${content.substring(0, 6000)}
+
+Create a syllabus with:
+1. Course title
+2. Brief description (2-3 sentences)
+3. 3-5 main learning objectives
+4. Prerequisites
+5. 4-6 high-level module topics (just titles and brief descriptions)
+6. Assessment methods
+7. Additional resources
+
+Return in this JSON format:
 {
-  "courseTitle": "Course Title Here",
-  "description": "Course description here",
-  "learningObjectives": ["Objective 1", "Objective 2", "Objective 3"],
-  "prerequisites": ["Prerequisite 1", "Prerequisite 2"],
-  "modules": [
-    {
-      "title": "Module Title",
-      "objectives": ["Objective 1", "Objective 2"],
-      "concepts": ["Concept 1", "Concept 2", "Concept 3"],
-      "exercises": ["Exercise 1", "Exercise 2"],
-      "estimatedTime": "X hours"
-    }
+  "courseTitle": "Title",
+  "description": "Description",
+  "learningObjectives": ["Obj1", "Obj2"],
+  "prerequisites": ["Pre1", "Pre2"],
+  "moduleTopics": [
+    {"title": "Module 1", "description": "Brief description"},
+    {"title": "Module 2", "description": "Brief description"}
   ],
-  "assessmentMethods": ["Method 1", "Method 2"],
-  "additionalResources": ["Resource 1", "Resource 2"]
+  "assessmentMethods": ["Method1", "Method2"],
+  "additionalResources": ["Resource1", "Resource2"]
 }
 `;
 
-    let courseResponse;
+  const response = provider === 'groq' ?
+    await evaluateWithGroq(syllabusPrompt, apiKey) :
+    await evaluateWithGemini(syllabusPrompt, apiKey);
 
-    if (provider === 'groq') {
-      courseResponse = await evaluateWithGroq(coursePrompt, apiKey);
-    } else {
-      courseResponse = await evaluateWithGemini(coursePrompt, apiKey);
-    }
-
-    // Try to parse the course structure response
-    try {
-      const courseStructure = JSON.parse(courseResponse);
-      console.log('Course structure generated successfully');
-      return courseStructure;
-    } catch (parseError) {
-      console.log('Failed to parse course structure JSON, using fallback');
-      return createFallbackCourseStructure(topic);
-    }
-
-  } catch (error) {
-    console.error('Error generating course from source:', error);
-    return createFallbackCourseStructure(topic);
+  try {
+    return JSON.parse(response);
+  } catch (e) {
+    console.log('Syllabus parsing failed, using fallback');
+    return createFallbackSyllabus(topic);
   }
+}
+
+// Phase 3: Generate detailed content for each module
+async function generateDetailedModules(content, syllabus, topic, apiKey, provider) {
+  const detailedModules = [];
+
+  for (const moduleTopic of syllabus.moduleTopics) {
+    console.log(`Generating detailed content for module: ${moduleTopic.title}`);
+
+    const modulePrompt = `
+Based on this content about "${topic}" and the module topic "${moduleTopic.title}" (${moduleTopic.description}), create detailed module content.
+
+Content:
+${content.substring(0, 4000)}
+
+For module "${moduleTopic.title}", provide:
+1. Specific learning objectives for this module
+2. Key concepts to cover
+3. Topics to teach
+4. Estimated time to complete
+
+Return in JSON format:
+{
+  "objectives": ["Objective 1", "Objective 2"],
+  "concepts": ["Concept 1", "Concept 2"],
+  "topics": ["Topic 1", "Topic 2"],
+  "estimatedTime": "X hours"
+}
+`;
+
+    const response = provider === 'groq' ?
+      await evaluateWithGroq(modulePrompt, apiKey) :
+      await evaluateWithGemini(modulePrompt, apiKey);
+
+    try {
+      const moduleDetails = JSON.parse(response);
+      detailedModules.push({
+        title: moduleTopic.title,
+        description: moduleTopic.description,
+        ...moduleDetails
+      });
+    } catch (e) {
+      console.log(`Failed to parse module ${moduleTopic.title}, using fallback`);
+      detailedModules.push({
+        title: moduleTopic.title,
+        description: moduleTopic.description,
+        objectives: [`Understand ${moduleTopic.title.toLowerCase()}`],
+        concepts: [`Key concepts in ${moduleTopic.title.toLowerCase()}`],
+        topics: [`Topics related to ${moduleTopic.title.toLowerCase()}`],
+        estimatedTime: "2-3 hours"
+      });
+    }
+
+    // Small delay to avoid rate limiting
+    await new Promise(resolve => setTimeout(resolve, 500));
+  }
+
+  return detailedModules;
+}
+
+// Phase 4: Generate exercises and assessments for each module
+async function generateModuleExercises(content, modules, topic, apiKey, provider) {
+  const modulesWithExercises = [];
+
+  for (const module of modules) {
+    console.log(`Generating exercises for module: ${module.title}`);
+
+    const exercisePrompt = `
+For the module "${module.title}" in the "${topic}" course, create practical exercises and activities.
+
+Module details:
+- Objectives: ${module.objectives?.join(', ')}
+- Concepts: ${module.concepts?.join(', ')}
+- Topics: ${module.topics?.join(', ')}
+
+Create 3-5 practical exercises/activities that help learners apply the concepts. Each exercise should include:
+1. Exercise title
+2. Description of what to do
+3. Learning outcomes
+4. Difficulty level (Beginner/Intermediate/Advanced)
+5. Estimated completion time
+
+Return in JSON format:
+[
+  {
+    "title": "Exercise Title",
+    "description": "What to do",
+    "outcomes": ["Outcome 1", "Outcome 2"],
+    "difficulty": "Intermediate",
+    "estimatedTime": "30 minutes"
+  }
+]
+`;
+
+    const response = provider === 'groq' ?
+      await evaluateWithGroq(exercisePrompt, apiKey) :
+      await evaluateWithGemini(exercisePrompt, apiKey);
+
+    try {
+      const exercises = JSON.parse(response);
+      modulesWithExercises.push({
+        ...module,
+        exercises: exercises
+      });
+    } catch (e) {
+      console.log(`Failed to parse exercises for ${module.title}, using fallback`);
+      modulesWithExercises.push({
+        ...module,
+        exercises: [{
+          title: `Practice Exercise for ${module.title}`,
+          description: `Complete practical exercises related to ${module.title.toLowerCase()}`,
+          outcomes: [`Apply concepts from ${module.title.toLowerCase()}`],
+          difficulty: "Intermediate",
+          estimatedTime: "45 minutes"
+        }]
+      });
+    }
+
+    // Small delay to avoid rate limiting
+    await new Promise(resolve => setTimeout(resolve, 500));
+  }
+
+  return modulesWithExercises;
+}
+
+// Fallback functions for each phase
+function createFallbackSyllabus(topic) {
+  return {
+    courseTitle: `Introduction to ${topic}`,
+    description: `A comprehensive course covering the fundamentals and advanced concepts of ${topic}.`,
+    learningObjectives: [
+      `Understand the core concepts of ${topic}`,
+      `Apply ${topic} principles in practical scenarios`,
+      `Develop problem-solving skills in ${topic}`
+    ],
+    prerequisites: [
+      'Basic computer literacy',
+      'High school level mathematics'
+    ],
+    moduleTopics: [
+      { title: `Introduction to ${topic}`, description: 'Basic concepts and overview' },
+      { title: `Core ${topic} Concepts`, description: 'Fundamental principles and theories' },
+      { title: `Practical Applications`, description: 'Real-world usage and examples' },
+      { title: `Advanced Topics`, description: 'Complex scenarios and optimization' }
+    ],
+    assessmentMethods: ['Quizzes', 'Projects', 'Final assessment'],
+    additionalResources: ['Official documentation', 'Online tutorials', 'Practice platforms']
+  };
 }
 
 // Helper function to scrape webpage content

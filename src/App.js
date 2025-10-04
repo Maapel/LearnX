@@ -203,6 +203,16 @@ function App() {
                 {course.courseStructure && (
                   <div className="course-structure">
                     <h3>📚 Complete Course Structure</h3>
+                    {course.courseStructure.generationPhases && (
+                      <div className="generation-phases">
+                        <h4>🔄 Generation Process:</h4>
+                        <ul>
+                          {Object.entries(course.courseStructure.generationPhases).map(([phase, description]) => (
+                            <li key={phase}>✅ {description}</li>
+                          ))}
+                        </ul>
+                      </div>
+                    )}
                     <div className="course-structure-content">
                       <div className="course-header">
                         <h4>{course.courseStructure.courseTitle}</h4>
