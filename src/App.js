@@ -264,11 +264,28 @@ function App() {
 
                             <div className="module-exercises">
                               <strong>Exercises:</strong>
-                              <ul>
+                              <div className="exercises-list">
                                 {module.exercises.map((exercise, i) => (
-                                  <li key={i}>{exercise}</li>
+                                  <div key={i} className="exercise-item">
+                                    <div className="exercise-header">
+                                      <strong>{exercise.title}</strong>
+                                      <span className={`difficulty ${exercise.difficulty.toLowerCase()}`}>
+                                        {exercise.difficulty}
+                                      </span>
+                                      <span className="exercise-time">{exercise.estimatedTime}</span>
+                                    </div>
+                                    <p className="exercise-description">{exercise.description}</p>
+                                    <div className="exercise-outcomes">
+                                      <strong>Learning Outcomes:</strong>
+                                      <ul>
+                                        {exercise.outcomes.map((outcome, j) => (
+                                          <li key={j}>{outcome}</li>
+                                        ))}
+                                      </ul>
+                                    </div>
+                                  </div>
                                 ))}
-                              </ul>
+                              </div>
                             </div>
                           </div>
                         ))}

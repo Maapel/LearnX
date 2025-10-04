@@ -793,3 +793,89 @@ button:hover {
   color: #f0f0f0;
   font-size: 0.9em;
 }
+
+/* Exercise Item Styles */
+.exercises-list {
+  margin-top: 10px;
+}
+
+.exercise-item {
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 8px;
+  padding: 15px;
+  margin: 10px 0;
+  backdrop-filter: blur(10px);
+}
+
+.exercise-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 10px;
+  flex-wrap: wrap;
+}
+
+.exercise-header strong {
+  color: #ffd700;
+  font-size: 1.1em;
+}
+
+.difficulty {
+  padding: 4px 8px;
+  border-radius: 12px;
+  font-size: 0.8em;
+  font-weight: bold;
+  text-transform: uppercase;
+}
+
+.difficulty.beginner {
+  background-color: #27ae60;
+  color: white;
+}
+
+.difficulty.intermediate {
+  background-color: #f39c12;
+  color: white;
+}
+
+.difficulty.advanced {
+  background-color: #e74c3c;
+  color: white;
+}
+
+.exercise-time {
+  padding: 4px 8px;
+  background-color: #9b59b6;
+  color: white;
+  border-radius: 12px;
+  font-size: 0.8em;
+  font-weight: bold;
+}
+
+.exercise-description {
+  color: #f0f0f0;
+  line-height: 1.6;
+  margin: 0;
+  font-size: 0.95em;
+}
+
+.exercise-outcomes {
+  margin-top: 10px;
+}
+
+.exercise-outcomes strong {
+  color: #ffd700;
+  font-size: 0.9em;
+}
+
+.exercise-outcomes ul {
+  margin: 5px 0;
+  padding-left: 20px;
+}
+
+.exercise-outcomes li {
+  margin: 3px 0;
+  color: #f0f0f0;
+  font-size: 0.85em;
+}
