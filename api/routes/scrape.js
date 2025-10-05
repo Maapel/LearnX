@@ -270,70 +270,432 @@ async function evaluateWithGroq(prompt, apiKey) {
   return data.choices[0].message.content;
 }
 
-// Helper function to generate course structure with sophisticated workflow
-async function generateCourseFromSource(mostAuthenticSource, topic, apiKey, provider) {
-  try {
-    console.log('Starting sophisticated course generation workflow...');
+// Phase 1: Intelligent Content Aggregation & Analysis
+async function performIntelligentContentAggregation(topic, apiKey, provider) {
+  console.log('🚀 Phase 1: Starting Intelligent Content Aggregation & Analysis...');
 
-    // Phase 1: Get initial reference content
-    console.log('Phase 1: Getting initial reference content...');
-    const initialContent = await scrapeWebpageContent(mostAuthenticSource.url);
+  // Step 1: Generate diversified search queries
+  console.log('📝 Step 1: Generating diversified search queries...');
+  const searchQueries = await generateDiversifiedSearchQueries(topic, apiKey, provider);
+  console.log(`Generated ${searchQueries.length} search queries:`, searchQueries);
 
-    if (!initialContent || initialContent.length < 100) {
-      console.log('Insufficient initial content, using fallback');
-      return createFallbackCourseStructure(topic);
+  // Step 2: Execute searches and collect results
+  console.log('🔍 Step 2: Executing searches and collecting results...');
+  const allSearchResults = [];
+  for (const query of searchQueries) {
+    try {
+      const response = await customsearch.cse.list({
+        cx: process.env.GOOGLE_CUSTOM_SEARCH_ENGINE_ID,
+        q: query,
+        auth: process.env.GOOGLE_CUSTOM_SEARCH_API_KEY,
+        num: 3, // Get top 3 results per query
+      });
+
+      if (response.data && response.data.items) {
+        const results = response.data.items.map(item => ({
+          title: item.title || 'Untitled',
+          url: item.link || '',
+          snippet: item.snippet || 'No description available',
+          displayLink: item.displayLink || '',
+          query: query // Track which query this came from
+        }));
+        allSearchResults.push(...results);
+      }
+
+      // Small delay between searches
+      await new Promise(resolve => setTimeout(resolve, 200));
+    } catch (error) {
+      console.error(`Error searching for query "${query}":`, error.message);
     }
+  }
 
-    // Phase 2: Analyze content and decide module structure
-    console.log('Phase 2: Analyzing content and deciding module structure...');
-    const courseStructure = await analyzeContentAndCreateModules(initialContent, topic, apiKey, provider);
+  console.log(`Collected ${allSearchResults.length} total search results`);
 
-    // Phase 3: For each module, get specific references and generate content
-    console.log('Phase 3: Processing each module individually...');
-    const modulesWithContent = [];
+  // Step 3: Select top authoritative sources
+  console.log('🎯 Step 3: Selecting top authoritative sources...');
+  const topSources = selectTopAuthoritativeSources(allSearchResults, topic);
+  console.log(`Selected ${topSources.length} top sources:`, topSources.map(s => s.title));
 
-    for (const module of courseStructure.modules) {
-      console.log(`Processing module: ${module.title}`);
+  // Step 4: Scrape and clean content
+  console.log('🧹 Step 4: Scraping and cleaning content...');
+  const scrapedContents = [];
+  for (const source of topSources) {
+    try {
+      console.log(`Scraping: ${source.title}`);
+      const content = await scrapeWebpageContent(source.url);
+      if (content && content.length > 200) { // Minimum content length
+        scrapedContents.push({
+          source: source,
+          content: content
+        });
+      }
+    } catch (error) {
+      console.error(`Error scraping ${source.url}:`, error.message);
+    }
+  }
 
+  console.log(`Successfully scraped content from ${scrapedContents.length} sources`);
+
+  // Step 5: Extract core concepts
+  console.log('🧠 Step 5: Extracting core concepts...');
+  const combinedContent = scrapedContents.map(item => item.content).join('\n\n');
+  const coreConcepts = await extractCoreConcepts(combinedContent, topic, apiKey, provider);
+  console.log(`Extracted ${coreConcepts.length} core concepts`);
+
+  return {
+    searchQueries,
+    allSearchResults,
+    topSources,
+    scrapedContents,
+    coreConcepts,
+    combinedContent
+  };
+}
+
+// Helper function to generate diversified search queries
+async function generateDiversifiedSearchQueries(topic, apiKey, provider) {
+  const queryPrompt = `
+Generate 5 diverse and effective search queries for learning about "${topic}". Each query should target different aspects of the topic to ensure comprehensive coverage.
+
+Consider these aspects:
+1. Beginner-friendly tutorials and introductions
+2. Official documentation and references
+3. Advanced concepts and best practices
+4. Real-world examples and use cases
+5. Common problems and solutions
+
+Return exactly 5 search queries as a JSON array of strings.
+Example: ["beginner tutorial query", "documentation query", "advanced query", "examples query", "troubleshooting query"]
+`;
+
+  try {
+    const response = provider === 'groq' ?
+      await evaluateWithGroq(queryPrompt, apiKey) :
+      await evaluateWithGemini(queryPrompt, apiKey);
+
+    const queries = JSON.parse(response);
+    return Array.isArray(queries) ? queries : [
+      `${topic} tutorial for beginners`,
+      `${topic} official documentation`,
+      `advanced ${topic} concepts`,
+      `${topic} real world examples`,
+      `${topic} common problems and solutions`
+    ];
+  } catch (error) {
+    console.error('Error generating search queries:', error);
+    return [
+      `${topic} tutorial for beginners`,
+      `${topic} official documentation`,
+      `advanced ${topic} concepts`,
+      `${topic} real world examples`,
+      `${topic} common problems and solutions`
+    ];
+  }
+}
+
+// Helper function to select top authoritative sources
+function selectTopAuthoritativeSources(searchResults, topic) {
+  // Remove duplicates by URL
+  const uniqueResults = searchResults.filter((result, index, self) =>
+    index === self.findIndex(r => r.url === result.url)
+  );
+
+  // Score each result based on authority indicators
+  const scoredResults = uniqueResults.map(result => {
+    let score = 0;
+
+    // Domain authority (highest priority)
+    const domain = result.displayLink.toLowerCase();
+    if (domain.includes('.edu') || domain.includes('.org') || domain.includes('.gov')) score += 10;
+    if (domain.includes('github.com') || domain.includes('stackoverflow.com')) score += 8;
+    if (domain.includes('docs.') || domain.includes('developer.')) score += 7;
+    if (domain.includes('tutorial') || domain.includes('learn')) score += 5;
+
+    // Content relevance
+    const content = (result.title + ' ' + result.snippet).toLowerCase();
+    if (content.includes('tutorial') || content.includes('guide')) score += 3;
+    if (content.includes('documentation') || content.includes('docs')) score += 3;
+    if (content.includes('example') || content.includes('practical')) score += 2;
+
+    // Title quality
+    if (result.title.length > 20 && result.title.length < 80) score += 2;
+
+    return { ...result, score };
+  });
+
+  // Sort by score and return top 5
+  return scoredResults
+    .sort((a, b) => b.score - a.score)
+    .slice(0, 5);
+}
+
+// Helper function to extract core concepts
+async function extractCoreConcepts(content, topic, apiKey, provider) {
+  const conceptPrompt = `
+Analyze the following content about "${topic}". Identify and extract the top 12-15 core concepts, technologies, and key terms that are most important for learning this topic.
+
+For each item, provide:
+- concept: The name of the concept/technology/term
+- summary: A concise, one-sentence explanation of what it is and why it's important
+
+Focus on fundamental concepts that form the foundation of ${topic}.
+
+Content to analyze:
+${content.substring(0, 6000)}
+
+Return as a JSON array of objects with 'concept' and 'summary' keys.
+`;
+
+  try {
+    const response = provider === 'groq' ?
+      await evaluateWithGroq(conceptPrompt, apiKey) :
+      await evaluateWithGemini(conceptPrompt, apiKey);
+
+    const concepts = JSON.parse(response);
+    return Array.isArray(concepts) ? concepts : [];
+  } catch (error) {
+    console.error('Error extracting core concepts:', error);
+    return [];
+  }
+}
+
+// Phase 2: Structured Course Outline Generation
+async function generateStructuredCourseOutline(coreConcepts, topic, apiKey, provider) {
+  console.log('📚 Phase 2: Generating Structured Course Outline...');
+
+  const outlinePrompt = `
+You are an expert curriculum designer. Create a comprehensive course syllabus for learning "${topic}".
+
+Use these core concepts to guide your structure:
+${coreConcepts.map(c => `- ${c.concept}: ${c.summary}`).join('\n')}
+
+Create a course with the following structure:
+{
+  "courseTitle": "A comprehensive title for the course",
+  "courseDescription": "A 2-3 sentence overview of what students will learn",
+  "difficulty": "Beginner/Intermediate/Advanced",
+  "estimatedDuration": "X weeks",
+  "learningObjectives": ["Objective 1", "Objective 2", "Objective 3", ...],
+  "prerequisites": ["Prerequisite 1", "Prerequisite 2"],
+  "modules": [
+    {
+      "moduleNumber": 1,
+      "title": "Module Title",
+      "description": "2-3 sentence description of what this module covers",
+      "learningObjectives": ["Module objective 1", "Module objective 2"],
+      "estimatedHours": 4,
+      "keyConcepts": ["Concept 1", "Concept 2", "Concept 3"]
+    }
+  ],
+  "assessmentMethods": ["Quiz", "Project", "Final Exam"],
+  "additionalResources": ["Resource 1", "Resource 2"]
+}
+
+Generate 5-7 modules that progress logically from basic to advanced concepts.
+`;
+
+  try {
+    const response = provider === 'groq' ?
+      await evaluateWithGroq(outlinePrompt, apiKey) :
+      await evaluateWithGemini(outlinePrompt, apiKey);
+
+    const courseOutline = JSON.parse(response);
+    console.log(`Generated course outline with ${courseOutline.modules?.length || 0} modules`);
+    return courseOutline;
+  } catch (error) {
+    console.error('Error generating course outline:', error);
+    return createFallbackCourseOutline(topic);
+  }
+}
+
+// Phase 3: Content Generation and Enrichment
+async function generateEnrichedModuleContent(modules, contentAnalysis, topic, apiKey, provider) {
+  console.log('🔄 Phase 3: Content Generation and Enrichment...');
+
+  const enrichedModules = [];
+
+  for (let i = 0; i < modules.length; i++) {
+    const module = modules[i];
+    console.log(`📝 Processing Module ${i + 1}: ${module.title}`);
+
+    try {
       // Get specific references for this module
+      console.log(`🔗 Getting references for: ${module.title}`);
       const moduleReferences = await getModuleSpecificReferences(module.title, module.description, topic, apiKey, provider);
 
       // Generate comprehensive content for this module
+      console.log(`✍️ Generating content for: ${module.title}`);
       const moduleContent = await generateModuleContent(module.title, module.description, moduleReferences, topic, apiKey, provider);
 
-      modulesWithContent.push({
-        ...module,
+      // Create enriched module with all content
+      const enrichedModule = {
+        moduleNumber: module.moduleNumber || (i + 1),
+        title: module.title,
+        description: module.description,
+        learningObjectives: module.learningObjectives || moduleContent.objectives,
+        estimatedHours: module.estimatedHours || 4,
+        keyConcepts: module.keyConcepts || [],
         content: moduleContent,
-        references: moduleReferences
-      });
+        references: moduleReferences,
+        multimediaContent: [], // For future video embedding
+        furtherReading: [] // Additional scraped URLs not used as primary source
+      };
 
-      // Delay to avoid rate limiting
-      await new Promise(resolve => setTimeout(resolve, 2000));
+      enrichedModules.push(enrichedModule);
+      console.log(`✅ Module ${i + 1} enriched successfully`);
+
+    } catch (error) {
+      console.error(`❌ Error enriching module ${module.title}:`, error.message);
+
+      // Create fallback enriched module
+      const fallbackModule = {
+        moduleNumber: module.moduleNumber || (i + 1),
+        title: module.title,
+        description: module.description,
+        learningObjectives: module.learningObjectives || [`Understand ${module.title.toLowerCase()}`],
+        estimatedHours: module.estimatedHours || 4,
+        keyConcepts: module.keyConcepts || [],
+        content: {
+          overview: `This module covers ${module.description}. Through structured learning and practical exercises, you'll gain essential knowledge and skills.`,
+          objectives: [`Master the fundamentals of ${module.title.toLowerCase()}`],
+          prerequisites: [`Basic understanding of ${topic}`],
+          estimatedTime: "3-4 hours",
+          learningSections: [{
+            title: `Introduction to ${module.title}`,
+            content: `Welcome to ${module.title}. This section introduces the core concepts and principles you'll learn in this module.`,
+            keyConcepts: ['Core concepts', 'Fundamental principles'],
+            codeExamples: ['# Example code'],
+            tips: ['Practice regularly', 'Take notes']
+          }],
+          exercises: [{
+            title: `Practice ${module.title}`,
+            description: `Apply the concepts learned in this module`,
+            steps: ['Review concepts', 'Practice implementation'],
+            expectedOutcome: 'Working understanding of the material',
+            difficulty: 'Intermediate',
+            timeEstimate: '45 minutes'
+          }],
+          quiz: [{
+            question: `What is the main focus of ${module.title}?`,
+            options: ['A) Advanced topics', 'B) Core concepts', 'C) Future trends', 'D) Historical context'],
+            correctAnswer: 'B',
+            explanation: 'The main focus is on core concepts and fundamental principles.'
+          }],
+          summary: `You've completed ${module.title} and gained valuable knowledge.`,
+          keyTakeaways: [`Understood ${module.title.toLowerCase()} concepts`]
+        },
+        references: [{
+          title: `Learn ${module.title}`,
+          url: `https://example.com/${module.title.toLowerCase().replace(/\s+/g, '-')}`,
+          type: 'tutorial',
+          description: `Educational content about ${module.title}`,
+          relevance: `Provides foundational knowledge for this module`
+        }],
+        multimediaContent: [],
+        furtherReading: []
+      };
+
+      enrichedModules.push(fallbackModule);
+      console.log(`⚠️ Used fallback for Module ${i + 1}`);
     }
 
-    // Phase 4: Compile final course
-    console.log('Phase 4: Compiling final course structure...');
+    // Delay to avoid rate limiting
+    if (i < modules.length - 1) {
+      console.log('⏳ Waiting before processing next module...');
+      await new Promise(resolve => setTimeout(resolve, 2000));
+    }
+  }
+
+  console.log(`✅ Phase 3 completed: ${enrichedModules.length} modules enriched`);
+  return enrichedModules;
+}
+
+// Helper function to create fallback course outline
+function createFallbackCourseOutline(topic) {
+  return {
+    courseTitle: `Introduction to ${topic}`,
+    courseDescription: `A comprehensive course covering the fundamentals and practical applications of ${topic}.`,
+    difficulty: "Beginner to Intermediate",
+    estimatedDuration: "4-6 weeks",
+    learningObjectives: [
+      `Understand the core concepts of ${topic}`,
+      `Apply ${topic} principles in practical scenarios`,
+      `Develop problem-solving skills related to ${topic}`
+    ],
+    prerequisites: ["Basic computer literacy"],
+    modules: [
+      {
+        moduleNumber: 1,
+        title: `Introduction to ${topic}`,
+        description: `Learn the basics and fundamental concepts of ${topic}`,
+        learningObjectives: ["Understand basic terminology", "Learn core principles"],
+        estimatedHours: 4,
+        keyConcepts: ["Basic concepts", "Core terminology"]
+      },
+      {
+        moduleNumber: 2,
+        title: `Core ${topic} Concepts`,
+        description: `Dive deeper into the essential concepts and theories`,
+        learningObjectives: ["Master fundamental concepts", "Understand relationships"],
+        estimatedHours: 6,
+        keyConcepts: ["Advanced concepts", "Theoretical foundations"]
+      }
+    ],
+    assessmentMethods: ["Quizzes", "Practical exercises", "Final project"],
+    additionalResources: ["Official documentation", "Online tutorials"]
+  };
+}
+
+// Main course generation function implementing the PLAN.md workflow
+async function generateCourseFromSource(mostAuthenticSource, topic, apiKey, provider) {
+  try {
+    console.log('🎯 Starting LearnX AI Agent Course Generation Workflow...');
+
+    // Phase 1: Intelligent Content Aggregation & Analysis
+    const contentAnalysis = await performIntelligentContentAggregation(topic, apiKey, provider);
+
+    // Phase 2: Structured Course Outline Generation
+    const courseOutline = await generateStructuredCourseOutline(contentAnalysis.coreConcepts, topic, apiKey, provider);
+
+    // Phase 3: Content Generation and Enrichment (simplified for now)
+    console.log('🔄 Phase 3: Content Generation and Enrichment...');
+    const enrichedModules = await generateEnrichedModuleContent(courseOutline.modules, contentAnalysis, topic, apiKey, provider);
+
+    // Phase 4: Final Review and Assembly
+    console.log('✅ Phase 4: Final Review and Assembly...');
     const finalCourse = {
-      courseTitle: courseStructure.courseTitle,
-      description: courseStructure.description,
-      learningObjectives: courseStructure.learningObjectives,
-      prerequisites: courseStructure.prerequisites,
-      modules: modulesWithContent,
-      assessmentMethods: courseStructure.assessmentMethods,
-      additionalResources: courseStructure.additionalResources,
-      generationPhases: {
-        phase1: 'Initial reference content obtained',
-        phase2: 'Course structure and modules decided',
-        phase3: 'Each module processed individually with specific references',
-        phase4: 'Final course compiled with all content and references'
+      courseTitle: courseOutline.courseTitle,
+      courseDescription: courseOutline.courseDescription,
+      difficulty: courseOutline.difficulty,
+      estimatedDuration: courseOutline.estimatedDuration,
+      learningObjectives: courseOutline.learningObjectives,
+      prerequisites: courseOutline.prerequisites,
+      modules: enrichedModules,
+      assessmentMethods: courseOutline.assessmentMethods,
+      additionalResources: courseOutline.additionalResources,
+      generationMetadata: {
+        phase1: {
+          searchQueriesGenerated: contentAnalysis.searchQueries.length,
+          sourcesScraped: contentAnalysis.scrapedContents.length,
+          coreConceptsExtracted: contentAnalysis.coreConcepts.length
+        },
+        phase2: {
+          modulesCreated: courseOutline.modules?.length || 0
+        },
+        phase3: {
+          modulesEnriched: enrichedModules.length
+        },
+        phase4: {
+          courseAssembled: true
+        }
       }
     };
 
-    console.log('Sophisticated course generation completed successfully');
+    console.log('🎉 LearnX AI Agent Course Generation Completed Successfully!');
     return finalCourse;
 
   } catch (error) {
-    console.error('Error in sophisticated course generation:', error);
+    console.error('❌ Error in LearnX course generation workflow:', error);
     return createFallbackCourseStructure(topic);
   }
 }
