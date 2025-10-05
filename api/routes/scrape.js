@@ -432,18 +432,25 @@ function selectTopAuthoritativeSources(searchResults, topic) {
 // Helper function to extract core concepts
 async function extractCoreConcepts(content, topic, apiKey, provider) {
   const conceptPrompt = `
-Analyze the following content about "${topic}". Identify and extract the top 12-15 core concepts, technologies, and key terms that are most important for learning this topic.
+You are an expert curriculum designer and subject matter expert in ${topic}. Analyze the provided content and extract the 12-15 most fundamental and important concepts that form the core foundation of ${topic}.
 
-For each item, provide:
-- concept: The name of the concept/technology/term
-- summary: A concise, one-sentence explanation of what it is and why it's important
+CONTENT TO ANALYZE:
+${content.substring(0, 8000)}
 
-Focus on fundamental concepts that form the foundation of ${topic}.
+INSTRUCTIONS:
+1. Focus on concepts that are essential for beginners to advanced learners
+2. Include both theoretical concepts and practical skills
+3. Prioritize concepts that are frequently mentioned and central to ${topic}
+4. Extract concepts that build upon each other in a logical learning progression
 
-Content to analyze:
-${content.substring(0, 6000)}
+For each concept, provide:
+- concept: The exact name/term (keep it concise but specific)
+- summary: A detailed 2-3 sentence explanation of what it is, why it's important, and how it relates to ${topic}
 
-Return as a JSON array of objects with 'concept' and 'summary' keys.
+Make sure the concepts progress from basic/foundational to more advanced. Include programming concepts, best practices, tools, and methodologies relevant to ${topic}.
+
+Return as a JSON array of objects:
+[{"concept": "Concept Name", "summary": "Detailed 2-3 sentence explanation..."}, ...]
 `;
 
   try {
@@ -464,34 +471,69 @@ async function generateStructuredCourseOutline(coreConcepts, topic, apiKey, prov
   console.log('📚 Phase 2: Generating Structured Course Outline...');
 
   const outlinePrompt = `
-You are an expert curriculum designer. Create a comprehensive course syllabus for learning "${topic}".
+You are a senior curriculum designer and subject matter expert specializing in creating comprehensive online courses for "${topic}". Your task is to design a complete, professional course syllabus that will provide students with deep, practical knowledge.
 
-Use these core concepts to guide your structure:
-${coreConcepts.map(c => `- ${c.concept}: ${c.summary}`).join('\n')}
+CORE CONCEPTS TO BUILD UPON:
+${coreConcepts.map((c, i) => `${i + 1}. ${c.concept}: ${c.summary}`).join('\n')}
 
-Create a course with the following structure:
+COURSE DESIGN REQUIREMENTS:
+
+1. **Course Title**: Create an engaging, professional title that clearly indicates the scope and value of the course
+
+2. **Course Description**: Write 3-4 detailed sentences explaining:
+   - What students will learn
+   - Why this knowledge is valuable
+   - Who the course is designed for
+   - What students will be able to do after completion
+
+3. **Difficulty Level**: Choose from "Beginner (no prior knowledge needed)", "Intermediate (basic familiarity required)", or "Advanced (solid foundation expected)"
+
+4. **Duration**: Estimate realistic completion time (e.g., "6-8 weeks at 5-7 hours per week")
+
+5. **Learning Objectives**: Create 5-7 specific, measurable objectives that clearly state what students will achieve
+
+6. **Prerequisites**: List 2-4 specific requirements or recommended background knowledge
+
+7. **Module Structure**: Design 5-7 modules that create a logical learning progression. Each module must include:
+   - **moduleNumber**: Sequential number
+   - **title**: Clear, descriptive module title
+   - **description**: 2-3 detailed sentences explaining what will be covered and why it's important
+   - **learningObjectives**: 3-5 specific objectives for this module
+   - **estimatedHours**: Realistic time estimate (4-8 hours)
+   - **keyConcepts**: 3-5 core concepts from the provided list that will be covered in depth
+
+8. **Assessment Methods**: List 3-5 evaluation approaches (quizzes, projects, peer reviews, etc.)
+
+9. **Additional Resources**: Suggest 3-5 external resources for further learning
+
+IMPORTANT GUIDELINES:
+- Ensure modules build upon each other progressively
+- Include both theoretical and practical learning objectives
+- Make objectives specific and measurable (use action verbs like "analyze", "implement", "design")
+- Consider real-world applications throughout the course
+- Balance breadth and depth appropriately for the chosen difficulty level
+
+Return the complete course structure in this exact JSON format:
 {
-  "courseTitle": "A comprehensive title for the course",
-  "courseDescription": "A 2-3 sentence overview of what students will learn",
+  "courseTitle": "Professional Course Title",
+  "courseDescription": "Detailed 3-4 sentence description...",
   "difficulty": "Beginner/Intermediate/Advanced",
-  "estimatedDuration": "X weeks",
-  "learningObjectives": ["Objective 1", "Objective 2", "Objective 3", ...],
-  "prerequisites": ["Prerequisite 1", "Prerequisite 2"],
+  "estimatedDuration": "X-Y weeks",
+  "learningObjectives": ["Specific objective 1", "Specific objective 2", ...],
+  "prerequisites": ["Specific prerequisite 1", "Specific prerequisite 2"],
   "modules": [
     {
       "moduleNumber": 1,
-      "title": "Module Title",
-      "description": "2-3 sentence description of what this module covers",
+      "title": "Specific Module Title",
+      "description": "Detailed 2-3 sentence description...",
       "learningObjectives": ["Module objective 1", "Module objective 2"],
-      "estimatedHours": 4,
+      "estimatedHours": 6,
       "keyConcepts": ["Concept 1", "Concept 2", "Concept 3"]
     }
   ],
-  "assessmentMethods": ["Quiz", "Project", "Final Exam"],
+  "assessmentMethods": ["Assessment method 1", "Assessment method 2"],
   "additionalResources": ["Resource 1", "Resource 2"]
 }
-
-Generate 5-7 modules that progress logically from basic to advanced concepts.
 `;
 
   try {
