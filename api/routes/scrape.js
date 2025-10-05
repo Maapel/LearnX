@@ -270,56 +270,70 @@ async function evaluateWithGroq(prompt, apiKey) {
   return data.choices[0].message.content;
 }
 
-// Helper function to generate course structure from the most authentic source
+// Helper function to generate course structure with sophisticated workflow
 async function generateCourseFromSource(mostAuthenticSource, topic, apiKey, provider) {
   try {
-    console.log('Starting iterative course generation process...');
+    console.log('Starting sophisticated course generation workflow...');
 
-    // Phase 1: Scrape and analyze content
-    console.log('Phase 1: Scraping content from most authentic source:', mostAuthenticSource.url);
-    const scrapedContent = await scrapeWebpageContent(mostAuthenticSource.url);
+    // Phase 1: Get initial reference content
+    console.log('Phase 1: Getting initial reference content...');
+    const initialContent = await scrapeWebpageContent(mostAuthenticSource.url);
 
-    if (!scrapedContent || scrapedContent.length < 100) {
-      console.log('Insufficient content scraped, using fallback');
+    if (!initialContent || initialContent.length < 100) {
+      console.log('Insufficient initial content, using fallback');
       return createFallbackCourseStructure(topic);
     }
 
-    // Phase 2: Generate high-level syllabus and module topics
-    console.log('Phase 2: Generating syllabus and module topics...');
-    const syllabusStructure = await generateSyllabus(scrapedContent, topic, apiKey, provider);
+    // Phase 2: Analyze content and decide module structure
+    console.log('Phase 2: Analyzing content and deciding module structure...');
+    const courseStructure = await analyzeContentAndCreateModules(initialContent, topic, apiKey, provider);
 
-    // Phase 3: Generate detailed modules one by one
-    console.log('Phase 3: Generating detailed module content...');
-    const detailedModules = await generateDetailedModules(scrapedContent, syllabusStructure, topic, apiKey, provider);
+    // Phase 3: For each module, get specific references and generate content
+    console.log('Phase 3: Processing each module individually...');
+    const modulesWithContent = [];
 
-    // Phase 4: Generate exercises and assessments for each module
-    console.log('Phase 4: Generating exercises and assessments...');
-    const modulesWithExercises = await generateModuleExercises(scrapedContent, detailedModules, topic, apiKey, provider);
+    for (const module of courseStructure.modules) {
+      console.log(`Processing module: ${module.title}`);
 
-    // Phase 5: Compile final course structure
-    console.log('Phase 5: Compiling final course structure...');
+      // Get specific references for this module
+      const moduleReferences = await getModuleSpecificReferences(module.title, module.description, topic, apiKey, provider);
+
+      // Generate comprehensive content for this module
+      const moduleContent = await generateModuleContent(module.title, module.description, moduleReferences, topic, apiKey, provider);
+
+      modulesWithContent.push({
+        ...module,
+        content: moduleContent,
+        references: moduleReferences
+      });
+
+      // Delay to avoid rate limiting
+      await new Promise(resolve => setTimeout(resolve, 2000));
+    }
+
+    // Phase 4: Compile final course
+    console.log('Phase 4: Compiling final course structure...');
     const finalCourse = {
-      courseTitle: syllabusStructure.courseTitle,
-      description: syllabusStructure.description,
-      learningObjectives: syllabusStructure.learningObjectives,
-      prerequisites: syllabusStructure.prerequisites,
-      modules: modulesWithExercises,
-      assessmentMethods: syllabusStructure.assessmentMethods,
-      additionalResources: syllabusStructure.additionalResources,
+      courseTitle: courseStructure.courseTitle,
+      description: courseStructure.description,
+      learningObjectives: courseStructure.learningObjectives,
+      prerequisites: courseStructure.prerequisites,
+      modules: modulesWithContent,
+      assessmentMethods: courseStructure.assessmentMethods,
+      additionalResources: courseStructure.additionalResources,
       generationPhases: {
-        phase1: 'Content scraped and analyzed',
-        phase2: 'Syllabus and module topics generated',
-        phase3: 'Detailed module content created',
-        phase4: 'Exercises and assessments added',
-        phase5: 'Course structure compiled'
+        phase1: 'Initial reference content obtained',
+        phase2: 'Course structure and modules decided',
+        phase3: 'Each module processed individually with specific references',
+        phase4: 'Final course compiled with all content and references'
       }
     };
 
-    console.log('Iterative course generation completed successfully');
+    console.log('Sophisticated course generation completed successfully');
     return finalCourse;
 
   } catch (error) {
-    console.error('Error in iterative course generation:', error);
+    console.error('Error in sophisticated course generation:', error);
     return createFallbackCourseStructure(topic);
   }
 }
@@ -711,6 +725,250 @@ function createFallbackCourseStructure(topic) {
       'Community forums'
     ]
   };
+}
+
+// Phase 2: Analyze content and create module structure
+async function analyzeContentAndCreateModules(content, topic, apiKey, provider) {
+  const analysisPrompt = `
+You are an expert curriculum designer. Analyze the following content about "${topic}" and create a comprehensive course structure.
+
+Content to analyze:
+${content.substring(0, 8000)}
+
+Based on this content, create a complete course structure with:
+
+1. **Course Title**: An engaging, descriptive title
+2. **Course Description**: 3-4 sentences describing what students will learn
+3. **Learning Objectives**: 4-6 main course objectives
+4. **Prerequisites**: Required background knowledge
+5. **Modules**: Decide on the optimal number of modules (4-8) and for each module provide:
+   - Module title
+   - Module description (2-3 sentences)
+   - Key topics that should be covered in this module
+   - Why this module is important in the learning progression
+
+6. **Assessment Methods**: How students will be evaluated
+7. **Additional Resources**: Recommended external resources
+
+Return in this JSON format:
+{
+  "courseTitle": "Complete Course Title",
+  "description": "Course description...",
+  "learningObjectives": ["Objective 1", "Objective 2", ...],
+  "prerequisites": ["Prerequisite 1", "Prerequisite 2"],
+  "modules": [
+    {
+      "title": "Module Title",
+      "description": "Module description...",
+      "keyTopics": ["Topic 1", "Topic 2", "Topic 3"],
+      "importance": "Why this module matters..."
+    }
+  ],
+  "assessmentMethods": ["Method 1", "Method 2"],
+  "additionalResources": ["Resource 1", "Resource 2"]
+}
+`;
+
+  const response = provider === 'groq' ?
+    await evaluateWithGroq(analysisPrompt, apiKey) :
+    await evaluateWithGemini(analysisPrompt, apiKey);
+
+  try {
+    return JSON.parse(response);
+  } catch (e) {
+    console.log('Course structure analysis failed, using fallback');
+    return createFallbackCourseStructure(topic);
+  }
+}
+
+// Phase 3a: Get specific references for each module
+async function getModuleSpecificReferences(moduleTitle, moduleDescription, mainTopic, apiKey, provider) {
+  const referencePrompt = `
+Find the best online resources and references specifically for learning "${moduleTitle}" in the context of "${mainTopic}".
+
+Module Description: ${moduleDescription}
+
+Search for and recommend 3-5 high-quality references that would be perfect for learning this specific module. Each reference should include:
+
+1. **Title**: Clear, descriptive title
+2. **URL**: Direct link to the resource
+3. **Type**: (tutorial, documentation, article, video, course, etc.)
+4. **Description**: Why this resource is valuable for this module
+5. **Relevance**: How it specifically helps with this module's topics
+
+Return in this JSON format:
+[
+  {
+    "title": "Resource Title",
+    "url": "https://example.com",
+    "type": "tutorial",
+    "description": "Why this resource is valuable...",
+    "relevance": "How it helps with this module..."
+  }
+]
+`;
+
+  const response = provider === 'groq' ?
+    await evaluateWithGroq(referencePrompt, apiKey) :
+    await evaluateWithGemini(referencePrompt, apiKey);
+
+  try {
+    const references = JSON.parse(response);
+    return references;
+  } catch (e) {
+    console.log(`Failed to get references for ${moduleTitle}, using fallback`);
+    return [
+      {
+        title: `Introduction to ${moduleTitle}`,
+        url: `https://example.com/${moduleTitle.toLowerCase().replace(/\s+/g, '-')}`,
+        type: 'tutorial',
+        description: `Comprehensive guide to ${moduleTitle} concepts and applications.`,
+        relevance: `Provides foundational knowledge essential for this module.`
+      }
+    ];
+  }
+}
+
+// Phase 3b: Generate comprehensive content for each module
+async function generateModuleContent(moduleTitle, moduleDescription, references, mainTopic, apiKey, provider) {
+  // Combine reference information
+  const referenceText = references.map(ref =>
+    `${ref.title} (${ref.type}): ${ref.description} - ${ref.relevance}`
+  ).join('\n');
+
+  const contentPrompt = `
+Create comprehensive, self-contained learning content for the module "${moduleTitle}" in the "${mainTopic}" course.
+
+Module Description: ${moduleDescription}
+
+Available References:
+${referenceText}
+
+Create a complete learning module with the following structure:
+
+1. **Module Overview**: Detailed introduction (4-5 paragraphs) explaining what students will learn and why it's important
+
+2. **Learning Objectives**: 5-7 specific, measurable objectives for this module
+
+3. **Prerequisites**: What students should know before starting
+
+4. **Estimated Time**: Realistic completion time
+
+5. **Learning Sections**: Create 4-6 detailed sections. Each section must include:
+   - Section title
+   - Comprehensive written explanation (400-600 words each)
+   - Key concepts covered
+   - Code examples (if applicable to ${mainTopic})
+   - Important tips and best practices
+   - Common mistakes to avoid
+
+6. **Practice Exercises**: 3-5 hands-on exercises with:
+   - Exercise title and detailed description
+   - Step-by-step instructions
+   - Expected outcomes
+   - Difficulty level and time estimate
+   - Learning objectives achieved
+
+7. **Module Quiz**: 6-10 multiple choice questions with explanations
+
+8. **Summary & Key Takeaways**: Comprehensive summary
+
+Return in this JSON format:
+{
+  "overview": "Detailed 4-5 paragraph introduction...",
+  "objectives": ["Objective 1", "Objective 2", ...],
+  "prerequisites": ["Prerequisite 1", "Prerequisite 2"],
+  "estimatedTime": "X hours",
+  "learningSections": [
+    {
+      "title": "Section Title",
+      "content": "Comprehensive 400-600 word explanation...",
+      "keyConcepts": ["Concept 1", "Concept 2"],
+      "codeExamples": ["Code example here"],
+      "tips": ["Important tip 1", "Best practice"],
+      "commonMistakes": ["Mistake to avoid 1", "Mistake to avoid 2"]
+    }
+  ],
+  "exercises": [
+    {
+      "title": "Exercise Title",
+      "description": "Detailed description...",
+      "steps": ["Step 1", "Step 2", "Step 3"],
+      "expectedOutcome": "What should happen...",
+      "difficulty": "Beginner/Intermediate/Advanced",
+      "timeEstimate": "X minutes",
+      "learningObjectives": ["What you learn from this exercise"]
+    }
+  ],
+  "quiz": [
+    {
+      "question": "Question text?",
+      "options": ["A) Option 1", "B) Option 2", "C) Option 3", "D) Option 4"],
+      "correctAnswer": "A",
+      "explanation": "Detailed explanation of why this is correct..."
+    }
+  ],
+  "summary": "Comprehensive module summary...",
+  "keyTakeaways": ["Takeaway 1", "Takeaway 2", "Takeaway 3"]
+}
+`;
+
+  const response = provider === 'groq' ?
+    await evaluateWithGroq(contentPrompt, apiKey) :
+    await evaluateWithGemini(contentPrompt, apiKey);
+
+  try {
+    const moduleContent = JSON.parse(response);
+    return moduleContent;
+  } catch (e) {
+    console.log(`Failed to generate content for ${moduleTitle}, using fallback`);
+    return {
+      overview: `Welcome to ${moduleTitle}! This module explores ${moduleDescription}. Through comprehensive explanations, practical examples, and hands-on exercises, you'll gain a deep understanding of these important concepts.`,
+      objectives: [
+        `Understand the core concepts of ${moduleTitle}`,
+        `Apply ${moduleTitle} principles in practice`,
+        `Identify best practices and common patterns`,
+        `Solve real-world problems using ${moduleTitle}`
+      ],
+      prerequisites: [`Basic knowledge of ${mainTopic}`],
+      estimatedTime: "3-4 hours",
+      learningSections: [
+        {
+          title: `Understanding ${moduleTitle}`,
+          content: `This section provides a comprehensive introduction to ${moduleTitle}. We begin by exploring the fundamental concepts and principles that form the foundation of this topic. Understanding these core ideas is crucial for building more advanced knowledge and skills.`,
+          keyConcepts: ['Core principles', 'Fundamental concepts'],
+          codeExamples: ['# Example code'],
+          tips: ['Practice regularly', 'Take notes'],
+          commonMistakes: ['Skipping fundamentals', 'Not testing code']
+        }
+      ],
+      exercises: [
+        {
+          title: `Practice ${moduleTitle}`,
+          description: `Apply the concepts learned in this module.`,
+          steps: ['Review the concepts', 'Try the examples', 'Create your own version'],
+          expectedOutcome: 'Working implementation demonstrating understanding',
+          difficulty: 'Intermediate',
+          timeEstimate: '60 minutes',
+          learningObjectives: ['Apply theoretical knowledge', 'Practice implementation']
+        }
+      ],
+      quiz: [
+        {
+          question: `What is the main purpose of ${moduleTitle}?`,
+          options: ['A) To complicate things', 'B) To provide structure and understanding', 'C) To increase complexity', 'D) To make development harder'],
+          correctAnswer: 'B',
+          explanation: 'The main purpose is to provide structure and understanding to help with effective implementation.'
+        }
+      ],
+      summary: `Congratulations on completing ${moduleTitle}! You've gained valuable knowledge and skills that will serve you well in your ${mainTopic} journey.`,
+      keyTakeaways: [
+        `Mastered ${moduleTitle} concepts`,
+        'Applied knowledge in practice',
+        'Developed problem-solving skills'
+      ]
+    };
+  }
 }
 
 // Fallback function to extract authenticity info from text response

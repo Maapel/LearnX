@@ -244,81 +244,47 @@ function App() {
                             <div className="module-header-section">
                               <h6 className="module-title">{module.title}</h6>
                               <div className="module-meta">
-                                <span className="module-time">⏱️ {module.estimatedTime}</span>
+                                <span className="module-time">⏱️ {module.content?.estimatedTime || module.estimatedTime}</span>
                               </div>
                             </div>
 
-                            {module.overview && (
+                            {/* Module Overview */}
+                            {module.content?.overview && (
                               <div className="module-overview">
                                 <h7>Module Overview</h7>
-                                <p className="overview-text">{module.overview}</p>
+                                <p className="overview-text">{module.content.overview}</p>
                               </div>
                             )}
 
-                            {module.prerequisites && module.prerequisites.length > 0 && (
+                            {/* Prerequisites */}
+                            {module.content?.prerequisites && module.content.prerequisites.length > 0 && (
                               <div className="module-prerequisites">
                                 <h7>Prerequisites</h7>
                                 <ul>
-                                  {module.prerequisites.map((prereq, i) => (
+                                  {module.content.prerequisites.map((prereq, i) => (
                                     <li key={i}>{prereq}</li>
                                   ))}
                                 </ul>
                               </div>
                             )}
 
-                            <div className="module-objectives">
-                              <h7>Learning Objectives</h7>
-                              <ul>
-                                {module.objectives.map((obj, i) => (
-                                  <li key={i}>{obj}</li>
-                                ))}
-                              </ul>
-                            </div>
-
-                            {module.keyConcepts && module.keyConcepts.length > 0 && (
-                              <div className="module-key-concepts">
-                                <h7>Key Concepts</h7>
-                                <div className="concepts-grid">
-                                  {module.keyConcepts.map((concept, i) => (
-                                    <div key={i} className="concept-item">
-                                      <strong className="concept-name">{concept.concept}</strong>
-                                      <p className="concept-explanation">{concept.explanation}</p>
-                                    </div>
+                            {/* Learning Objectives */}
+                            {module.content?.objectives && module.content.objectives.length > 0 && (
+                              <div className="module-objectives">
+                                <h7>Learning Objectives</h7>
+                                <ul>
+                                  {module.content.objectives.map((obj, i) => (
+                                    <li key={i}>{obj}</li>
                                   ))}
-                                </div>
-                              </div>
-                            )}
-
-                            {module.detailedTopics && module.detailedTopics.length > 0 && (
-                              <div className="module-detailed-topics">
-                                <h7>Detailed Topics</h7>
-                                <div className="topics-list">
-                                  {module.detailedTopics.map((topic, i) => (
-                                    <div key={i} className="topic-item">
-                                      <strong className="topic-title">{topic.topic}</strong>
-                                      <p className="topic-description">{topic.description}</p>
-                                    </div>
-                                  ))}
-                                </div>
-                              </div>
-                            )}
-
-                            {module.moduleContent && (
-                              <div className="module-content-outline">
-                                <h7>Module Content Outline</h7>
-                                <div className="content-outline">
-                                  {module.moduleContent.split('\n').map((line, i) => (
-                                    <p key={i} className="outline-line">{line}</p>
-                                  ))}
-                                </div>
+                                </ul>
                               </div>
                             )}
 
                             {/* Learning Sections - Main Content */}
-                            {module.learningSections && module.learningSections.length > 0 && (
+                            {module.content?.learningSections && module.content.learningSections.length > 0 && (
                               <div className="learning-sections">
                                 <h7>📖 Learning Content</h7>
-                                {module.learningSections.map((section, i) => (
+                                {module.content.learningSections.map((section, i) => (
                                   <div key={i} className="learning-section">
                                     <h8>{section.title}</h8>
                                     <div className="section-content">
@@ -359,24 +325,35 @@ function App() {
                                         </ul>
                                       </div>
                                     )}
+
+                                    {section.commonMistakes && section.commonMistakes.length > 0 && (
+                                      <div className="section-mistakes">
+                                        <strong>⚠️ Common Mistakes to Avoid:</strong>
+                                        <ul>
+                                          {section.commonMistakes.map((mistake, k) => (
+                                            <li key={k}>{mistake}</li>
+                                          ))}
+                                        </ul>
+                                      </div>
+                                    )}
                                   </div>
                                 ))}
                               </div>
                             )}
 
                             {/* Practice Exercises */}
-                            {module.exercises && module.exercises.length > 0 && (
+                            {module.content?.exercises && module.content.exercises.length > 0 && (
                               <div className="module-exercises">
                                 <h7>🛠️ Practice Exercises</h7>
                                 <div className="exercises-list">
-                                  {module.exercises.map((exercise, i) => (
+                                  {module.content.exercises.map((exercise, i) => (
                                     <div key={i} className="exercise-item">
                                       <div className="exercise-header">
                                         <strong>{exercise.title}</strong>
                                         <span className={`difficulty ${(exercise.difficulty || 'intermediate').toLowerCase()}`}>
                                           {exercise.difficulty || 'Intermediate'}
                                         </span>
-                                        <span className="exercise-time">{exercise.estimatedTime || '30 minutes'}</span>
+                                        <span className="exercise-time">{exercise.timeEstimate || exercise.estimatedTime || '30 minutes'}</span>
                                       </div>
 
                                       <div className="exercise-description">
@@ -399,6 +376,17 @@ function App() {
                                             <p>{exercise.expectedOutcome}</p>
                                           </div>
                                         )}
+
+                                        {exercise.learningObjectives && exercise.learningObjectives.length > 0 && (
+                                          <div className="exercise-learning-objectives">
+                                            <strong>Learning Objectives:</strong>
+                                            <ul>
+                                              {exercise.learningObjectives.map((obj, j) => (
+                                                <li key={j}>{obj}</li>
+                                              ))}
+                                            </ul>
+                                          </div>
+                                        )}
                                       </div>
                                     </div>
                                   ))}
@@ -407,11 +395,11 @@ function App() {
                             )}
 
                             {/* Module Quiz */}
-                            {module.quiz && module.quiz.length > 0 && (
+                            {module.content?.quiz && module.content.quiz.length > 0 && (
                               <div className="module-quiz">
                                 <h7>📝 Knowledge Check</h7>
                                 <div className="quiz-questions">
-                                  {module.quiz.map((question, i) => (
+                                  {module.content.quiz.map((question, i) => (
                                     <div key={i} className="quiz-question">
                                       <h9>Question {i + 1}: {question.question}</h9>
 
@@ -442,21 +430,42 @@ function App() {
                             )}
 
                             {/* Module Summary */}
-                            {module.summary && (
+                            {module.content?.summary && (
                               <div className="module-summary">
                                 <h7>📋 Module Summary</h7>
-                                <p className="summary-text">{module.summary}</p>
+                                <p className="summary-text">{module.content.summary}</p>
 
-                                {module.keyTakeaways && module.keyTakeaways.length > 0 && (
+                                {module.content.keyTakeaways && module.content.keyTakeaways.length > 0 && (
                                   <div className="key-takeaways">
                                     <strong>🎯 Key Takeaways:</strong>
                                     <ul>
-                                      {module.keyTakeaways.map((takeaway, i) => (
+                                      {module.content.keyTakeaways.map((takeaway, i) => (
                                         <li key={i}>{takeaway}</li>
                                       ))}
                                     </ul>
                                   </div>
                                 )}
+                              </div>
+                            )}
+
+                            {/* Module References */}
+                            {module.references && module.references.length > 0 && (
+                              <div className="module-references">
+                                <h7>🔗 Additional References</h7>
+                                <div className="references-list">
+                                  {module.references.map((ref, i) => (
+                                    <div key={i} className="reference-item">
+                                      <div className="reference-header">
+                                        <a href={ref.url} target="_blank" rel="noopener noreferrer" className="reference-link">
+                                          {ref.title}
+                                        </a>
+                                        <span className={`reference-type ${ref.type}`}>{ref.type}</span>
+                                      </div>
+                                      <p className="reference-description">{ref.description}</p>
+                                      <p className="reference-relevance"><em>{ref.relevance}</em></p>
+                                    </div>
+                                  ))}
+                                </div>
                               </div>
                             )}
                           </div>
